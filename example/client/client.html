@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebSocket Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+  </head>
+  <body class="bg-light">
+
+    <div class="container pl-0 pr-0">
+      <nav class="navbar navbar-dark bg-dark mb-2">
+        <a href="#" class="navbar-brand">Bamboo Sample Chat🐼</a>
+        <button class="navbar-toggler" type="button"
+            data-toggle="collapse"
+            data-target="#navmenu1"
+            aria-controls="navmenu1"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navmenu1">
+          <div class="navbar-nav">
+            <a class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
+            <a class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+      <p class="lead">Bamboo WebSocket Sample Chat🐼へようこそ</p>
+
+      <div id="comments" class="container"></div>
+
+    <div class="container fixed-bottom bg-dark">
+      <div id="form" class="row p-3">
+        <input id="m" class="col-9" type="text" class="form-control" autocomplete="off"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+    <div class="modal fade" id="launch_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="label1">接続完了</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Web Socket Serverとの接続が完了しました。
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="connect_filed_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="label1">接続に失敗しました</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Web Socket Serverとの接続に失敗しました。<br>
+            再度接続してください。
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="disconnect_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="label1">接続が切れました</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Web Socket Serverとの接続が切れました。<br>
+            再度接続してください。
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+      let socket = null;
+      socket = new WebSocket("ws://localhost:9001", ["chat"]);
+
+      /**
+      * ソケット通信の接続が成功したとき
+      * @type {event} event
+      */
+      socket.onopen = function (event) {
+        console.log("接続成功！！！");
+        $("#launch_modal").modal('show');
+      }
+
+      /**
+      * サーバーからのメッセージを受信したとき
+      * @type {event} event
+      */
+      socket.onmessage = function (event) {
+        var elem = other_message_box(event)
+        var comments = document.getElementById("comments");
+        comments.appendChild(elem);
+      }
+
+      /**
+      * サーバーとの接続が切れたとき
+      * @type {event} event
+      */
+      socket.onclose = function (event) {
+        $("#disconnect_modal").modal('show');
+      }
+
+      /**
+      * サーバーにメッセージを送信する
+      * @type {event} event
+      */
+      const send_message = () => 
+      {
+        const message = document.getElementById("m");
+        if(message.value.trim() != "") 
+        { 
+          socket.send(message.value);
+          var elem = self_message_box(message);
+          var comments = document.getElementById("comments");
+          comments.appendChild(elem);
+          message.value = "";
+        }
+        return false;
+      }
+      
+      /**
+      * ソケット通信を閉じる
+      */
+      const close_socket = () =>
+      {
+        console.log("再接遮断んんん！！！");
+        while(socket.bufferedAmount != 0){/** Sending rest data... */}
+        if(socket.readyState == 1){ socket.close(1000, ""); }
+      }
+
+      /**
+      * ソケット通信を開始する
+      */
+      const connect_socket = (sub_protocol=["chat"]) =>
+      {
+        console.log("再接続開始いい！！！");
+        try {
+          socket = new WebSocket("ws://localhost:9001", sub_protocol);
+          $("#launch_modal").modal('show');
+        } catch (error) {
+          $("#launch_modal").modal('show');
+        }
+      }
+
+      /**
+      * 自身がメッセージを送信した際に画面上に表示する
+      * メッセージボックスを表示させる
+      */
+      const self_message_box = (message) =>
+      {
+        var elem = document.createElement('div');
+        elem.classList.add('row');
+        elem.classList.add('mb-2');
+
+        var elem_left = document.createElement('div');
+        elem_left.classList.add('col-6');
+
+        var elem_right = document.createElement('div');
+        elem_right.classList.add('col-6');
+        elem_right.classList.add('bg-white');
+        elem_right.classList.add('shadow-sm');
+        elem_right.classList.add('col-6');
+        elem_right.classList.add('border');
+        elem_right.classList.add('border-info');
+        elem_right.classList.add('rounded');
+        elem_right.classList.add('p-3');
+        elem_right.textContent = message.value;
+
+        elem.appendChild(elem_left);
+        elem.appendChild(elem_right);
+        return elem;
+      }
+
+      /**
+      * 自身がメッセージを送信した際に画面上に表示する
+      * メッセージボックスを表示させる
+      */
+      const other_message_box = (event) =>
+      {
+        var elem = document.createElement('div');
+        elem.classList.add('row');
+        elem.classList.add('mb-2');
+
+        var elem_left = document.createElement('div');
+        elem_left.classList.add('col-6');
+        elem_left.classList.add('bg-white');
+        elem_left.classList.add('shadow-sm');
+        elem_left.classList.add('col-6');
+        elem_left.classList.add('border');
+        elem_left.classList.add('border-info');
+        elem_left.classList.add('rounded');
+        elem_left.classList.add('p-3');
+        elem_left.textContent = event.data;
+        
+        var elem_right = document.createElement('div');
+        elem_right.classList.add('col-6');
+
+        elem.appendChild(elem_left);
+        elem.appendChild(elem_right);
+        return elem;
+      }
+
+    </script>
+
+  </body>
+</html>
