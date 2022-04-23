@@ -1,4 +1,4 @@
-import strutils, unicode
+import mersenne, random, strutils, unicode
 
 proc convertBinaryStrings*(bytes: char): string =
   ##[
@@ -62,11 +62,41 @@ proc convertRuneSequence*(message: string, per_length: int=3000): seq[string] =
   for n in countup(0, count):
       if n == count:
           # echo(left, "..<", left + modulo, ": ", message_to_rune[left..<left + modulo])
-          messages.add($message_to_rune[left..<left + modulo])
+          if len(message_to_rune[left..<left + modulo]) > 0:
+            messages.add($message_to_rune[left..<left + modulo])
       else:
           # echo(left, "..<", right, ": ", message_to_rune[left..<right])
           messages.add($message_to_rune[left..<right])
           left = right
           right += per_length
   
+  if messages.len() == 0:
+    messages.add("")
+
   return messages
+
+proc generateMaskKey*(seeder: int=0): seq[char] =
+  ##[
+  マスク用のKeyを生成する。
+  マスク用のKeyはランダムな32bit値である。
+  ]##
+  var uin32_seeder: uint32
+  try:
+    # seederが0の場合は
+    if seeder == 0:
+      uin32_seeder = uint32(seeder)
+    else:
+      uin32_seeder = uint32(rand(2147483647))
+  except:
+    uin32_seeder = uint32(rand(2147483647))
+
+  var twister = newMersenneTwister(uin32_seeder)
+  var twister_string = twister.getNum().BiggestInt.toBin(32)
+
+  var mask_key: seq[char]
+  var left = 0
+  for i in countup(7, 31, 7):
+    mask_key.add(char(fromBin[uint8]("0b" & twister_string[left..i])))
+    left = i
+
+  return mask_key

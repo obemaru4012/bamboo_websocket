@@ -7,7 +7,6 @@ type
   WebSocketHandShakeSubProtcolsProcedureError* = object of CatchableError
   WebSocketHandShakePostProcessProcedureError* = object of CatchableError
   WebSocketHandShakeHeaderError* = object of ValueError
-  WebSocketDatReceivedPostProcessError* = object of CatchableError
+  WebSocketDataReceivedPostProcessError* = object of CatchableError
   UnknownOpcodeReceiveError* = object of ValueError
-  NoMaskedFrameReceiveError* = object of ValueError
   WebSocketOtherError* = object of IOError

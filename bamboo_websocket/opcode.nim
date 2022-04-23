@@ -7,4 +7,3 @@ type
     CLOSE        = 0x8 # クローズフレーム
     PING         = 0x9 # ピン！
     PONG         = 0xa # ポン！
-    EXCEPT       = 0xf # 例外！
