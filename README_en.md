@@ -4,25 +4,21 @@
 * 100%NimによるWebSocketサーバーのシンプルな実装です。
 * 竹を割ったようにさっぱりとした実装を目指しています。
 * チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
-* Bambooの詳細な説明と利用方法についてはwikiに記載予定です。
-* [TODO] APIリファレンスはこちら。
-* [README in English.](./README_en.md)
+* Bambooの詳細な説明と利用方法についてはwikiに記載があります。
 
 #### 🖥Dependency
-* requires "nim >= 1.4.8"
+* Nim >= 1.48
 
 #### 👩‍💻Setup
-```bash
-$ nimble install bamboowebsocket
-```
+* TODO
 
 #### 🤔Description
-* Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)やでの利用を想定しています。
-* 一般的な利用方法はexampleディレクトリ内で実装されています。
+* Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)上での利用を想定しています。
+* 一般的な利用方法はsampleディレクトリ内で提示されています。
 
-#### 🤙Usage
-##### 1. 🐥Echo Server
-接続後にサーバが受信した文字列をクライアントにそのまま返します。
+#### 🤙Basic Usage
+### 🐥Echo Server
+* 接続後にサーバが受信した文字列をそのまま返します。
 
 #### 😏Advanced Usage
 ##### 🐄Chat Server
@@ -30,7 +26,7 @@ $ nimble install bamboowebsocket
 * 部屋分け機能、プライベートチャット機能、チャット内容の保存機能が簡単に利用できます。
 
 ##### 🐭Game Server
-* [TODO]
+* TODO
 
 #### 📝Author
 * [omachi-satoshi](https://github.com/omachi-satoshi)
