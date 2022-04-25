@@ -4,7 +4,7 @@ version       = "0.1.0"
 author        = "obemaru4012"
 description   = "This is a simple implementation of a WebSocket server with 100% Nim."
 license       = "MIT"
-srcDir        = "src"
+srcDir        = "bamboo_websocket"
 
 
 # Dependencies
