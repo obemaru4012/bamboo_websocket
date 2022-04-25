@@ -55,7 +55,7 @@ suite "utilities test":
     check convertRuneSequence("ぱんだ！ぱんだ！ぱんだ！", 4) == @["ぱんだ！", "ぱんだ！", "ぱんだ！"]
 
   test "generateMaskKey(1)":
-    check generateMaskKey(1) == @['6', '\x04', '\x7F', '\xF5']
+    check generateMaskKey(1) == @['j', '`', '}', '\x84']
 
   test "generateMaskKey(514902776)":
-    check generateMaskKey(setting["mask_key_seeder"].parseInt()) == @['\xB4', '\f', '%', '\x93']
+    check generateMaskKey(setting["mask_key_seeder"].parseInt()) == @['\x82', '\x00', ']', '\x8D']

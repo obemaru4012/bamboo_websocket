@@ -14,7 +14,6 @@ from ../bamboo_websocket/receive_result import ReceiveResult
 from ../bamboo_websocket/bamboo_websocket import handshake, loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()
-var websockets = WebSockets
 
 proc callBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
@@ -24,29 +23,32 @@ proc callBack(request: Request) {.async, gcsafe.} =
     var ws: WebSocket
     try:
       ws = await openWebSocket(request, setting)
-      websockets.add(ws)
+      WebSockets.add(ws)
+      echo("ID: ", ws.id, " has Opned.")
     except:
       discard
 
     while ws.status == ConnectionStatus.OPEN:
       try:
         let receive = await ws.receiveMessage()
+
         if receive.OPCODE == OpCode.TEXT:
           echo(counter, ": ", receive.OPCODE, "=" , receive.MESSAGE)
-          counter += 1
+          for websocket in WebSockets:
+            if websocket.id != ws.id:
+              echo("$# => $#" % [$(ws.id), $(websocket.id)])
+              await websocket.sendMessage(receive.MESSAGE, 0x1, 3000, true)
 
         if receive.OPCODE == OpCode.CLOSE:
           echo("ID: ", ws.id, " has Closed.")
-
-        for websocket in websockets:
-          if websocket.id != ws.id and receive.OPCODE == OpCode.TEXT:
-            await websocket.sendMessage(receive.MESSAGE, 0x1, 3000, true)
+          break
 
       except:
         ws.status = ConnectionStatus.CLOSED
         ws.socket.close()
- 
-    websockets.delete(websockets.find(ws))
+
+    WebSockets.delete(WebSockets.find(ws))
+    ws.socket.close()
 
 if isMainModule:
   var server = newAsyncHttpServer()

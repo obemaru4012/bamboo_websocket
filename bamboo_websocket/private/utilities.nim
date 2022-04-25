@@ -82,11 +82,11 @@ proc generateMaskKey*(seeder: int=0): seq[char] =
   ]##
   var uin32_seeder: uint32
   try:
-    # seederが0の場合は
     if seeder == 0:
-      uin32_seeder = uint32(seeder)
-    else:
       uin32_seeder = uint32(rand(2147483647))
+    else:
+      uin32_seeder = uint32(seeder)
+
   except:
     uin32_seeder = uint32(rand(2147483647))
 

@@ -104,35 +104,40 @@
 
     <script>
 
-      let socket = null;
+      const on_open = (event) => {
+        $("#launch_modal").modal('show');
+      }
+
+      const on_message = (event) => {
+        var elem = other_message_box(event)
+        var comments = document.getElementById("comments");
+        comments.appendChild(elem);
+      }
+
+      const on_close = (event) => {
+        $("#disconnect_modal").modal('show');
+      }
+
+      var socket = null;
       socket = new WebSocket("ws://localhost:9001", ["chat"]);
 
       /**
       * ソケット通信の接続が成功したとき
       * @type {event} event
       */
-      socket.onopen = function (event) {
-        console.log("接続成功！！！");
-        $("#launch_modal").modal('show');
-      }
+      socket.onopen = on_open
 
       /**
       * サーバーからのメッセージを受信したとき
       * @type {event} event
       */
-      socket.onmessage = function (event) {
-        var elem = other_message_box(event)
-        var comments = document.getElementById("comments");
-        comments.appendChild(elem);
-      }
+      socket.onmessage = on_message
 
       /**
       * サーバーとの接続が切れたとき
       * @type {event} event
       */
-      socket.onclose = function (event) {
-        $("#disconnect_modal").modal('show');
-      }
+      socket.onclose = on_close
 
       /**
       * サーバーにメッセージを送信する
@@ -157,7 +162,6 @@
       */
       const close_socket = () =>
       {
-        console.log("再接遮断んんん！！！");
         while(socket.bufferedAmount != 0){/** Sending rest data... */}
         if(socket.readyState == 1){ socket.close(1000, ""); }
       }
@@ -167,12 +171,13 @@
       */
       const connect_socket = (sub_protocol=["chat"]) =>
       {
-        console.log("再接続開始いい！！！");
         try {
           socket = new WebSocket("ws://localhost:9001", sub_protocol);
-          $("#launch_modal").modal('show');
+          socket.onopen = on_open
+          socket.onmessage = on_message
+          socket.onclose = on_close
         } catch (error) {
-          $("#launch_modal").modal('show');
+          $("#connect_filed_modal").modal('show');
         }
       }
 
