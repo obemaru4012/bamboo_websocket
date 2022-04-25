@@ -9,7 +9,7 @@
 * [README in English.](./README_en.md)
 
 #### 🖥Dependency
-* requires "nim >= 1.4.8"
+`requires "nim >= 1.4.8"`
 
 #### 👩‍💻Setup
 ```bash
@@ -17,20 +17,19 @@ $ nimble install bamboowebsocket
 ```
 
 #### 🤔Description
-* Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)やでの利用を想定しています。
-* 一般的な利用方法はexampleディレクトリ内で実装されています。
+* Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)での利用を想定しています。
+* 一般的な利用方法がexampleディレクトリ内で実装されています。
 
 #### 🤙Usage
 ##### 1. 🐥Echo Server
-接続後にサーバが受信した文字列をクライアントにそのまま返します。
+[TODO]
 
 #### 😏Advanced Usage
-##### 🐄Chat Server
-* Bamboo-WebSocket上でのチャットサーバーの概要です。
-* 部屋分け機能、プライベートチャット機能、チャット内容の保存機能が簡単に利用できます。
+##### 1. 🐄Chat Server
+[TODO]
 
-##### 🐭Game Server
-* [TODO]
+##### 2. 🐭Game Server
+[TODO]
 
 #### 📝Author
 * [omachi-satoshi](https://github.com/omachi-satoshi)
