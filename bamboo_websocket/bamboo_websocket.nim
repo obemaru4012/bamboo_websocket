@@ -16,11 +16,10 @@ import asyncdispatch,
 
 from errors import 
   UnknownOpcodeReceiveError,
-  NoMaskedFrameReceiveError,
   WebSocketHandShakePreProcessError,
   WebSocketHandShakeSubProtcolsProcedureError,
   WebSocketHandShakePostProcessProcedureError,
-  WebSocketDatReceivedPostProcessError,
+  WebSocketDataReceivedPostProcessError,
   WebSocketHandShakeHeaderError,
   WebSocketOtherError
 
@@ -29,7 +28,39 @@ from frame import Frame
 from opcode import Opcode
 from receive_result import ReceiveResult
 from websocket import WebSocket
-from ./private/utilities import convertBinaryStrings, decodeHexStrings, convertRuneSequence
+from ./private/utilities import 
+  convertBinaryStrings, 
+  decodeHexStrings, 
+  convertRuneSequence,
+  generateMaskKey
+
+proc handshake*(host: string, client_port: int, server_port: int, setting: TableRef[string, string]): Future[WebSocket] {.async.} =
+  ##[
+  
+  ]##
+  var ws = WebSocket()
+  var client = newAsyncHttpClient()
+  client.headers = newHttpHeaders({
+                                   "Host": "$#:$#" % [host, $(client_port)],
+                                   "Origin": "http://$#:$#" % [host, $(client_port)],
+                                   "Upgrade": "$#" % [setting["upgrade"]], 
+                                   "Connection": "$#" % [setting["connection"]], 
+                                   "Sec-WebSocket-Key": "$#" % [setting["websocket_key"]],
+                                   "Sec-WebSocket-Version": "13"
+                                  })
+
+  # [TODO] HTTP"S"
+  try:
+    var response = await client.get("http://$#:$#/" % [host, $(server_port)])
+  except:
+    # [TODO] raise error.
+    ws.socket = nil
+    ws.status = ConnectionStatus.INITIAl
+    return ws
+
+  ws.socket = client.getSocket()
+  ws.status = ConnectionStatus.OPEN
+  return ws
 
 proc getSecWebSocketAccept(sec_webSocket_key: string, magic_strings="258EAFA5-E914-47DA-95CA-C5AB0DC85B11"): string =
   ##[
@@ -69,19 +100,19 @@ proc loadServerSetting*(path="./setting.json"): TableRef[string, string] =
 
   return table
 
-proc defaultPreprocessProcedure*(ws: WebSocket, headers: HttpHeaders): bool = 
+proc defaultPreprocessProcedure*(ws: WebSocket, headers: HttpHeaders): bool {.gcsafe.}= 
   ##[
   
   ]##
   return true
 
-proc defaultSubProtcolsProcedure*(ws: WebSocket, sub_protocol: seq[string]): bool = 
+proc defaultSubProtcolsProcedure*(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} = 
   ##[
 
   ]##
   return true
 
-proc defaultAdditionalProcedure*(ws: WebSocket): bool = 
+proc defaultAdditionalProcedure*(ws: WebSocket): bool {.gcsafe.} = 
   ##[
 
   ]##
@@ -92,7 +123,7 @@ proc openWebSocket*(request: Request,
                     preProcessProcedure: proc (ws: WebSocket, headers: HttpHeaders): bool = defaultPreprocessProcedure,
                     subProtcolsProcedure: proc (ws: WebSocket, sub_protocol: seq[string]): bool = defaultSubProtcolsProcedure,
                     postProcessProcedure: proc (ws: WebSocket): bool = defaultAdditionalProcedure):
-                    Future[WebSocket] {.async, gcsafe.} =
+                    Future[WebSocket] {.async.} =
   ##[
 
   ]##
@@ -204,7 +235,7 @@ proc openWebSocket*(request: Request,
 
   return ws
 
-proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int=3000): Future[void] {.async.} =
+proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int=3000, is_masked: bool=false): Future[void] {.async.} =
   ##[
 
   ]##
@@ -224,7 +255,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
       frame.OPCODE = Opcode(opcode)
-      frame.MASK = false # SERVER => CLIENTの場合はFalseでよし
+      frame.MASK = is_masked # SERVER => CLIENTの場合はFalse、CLIENT => SERVERの場合はTrueが基本線
       frame.DATA = m # 送信データ
 
     # 分割して送信される場合（初回）
@@ -234,7 +265,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
       frame.OPCODE = Opcode(opcode)
-      frame.MASK = false # SERVER => CLIENTの場合はFalseでよし
+      frame.MASK = is_masked # SERVER => CLIENTの場合はFalseでよし
       frame.DATA = m # 送信データ
 
     # 分割して送信される場合（初回～最後の1つ前まで）
@@ -244,7 +275,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
       frame.OPCODE = Opcode.CONTINUATION
-      frame.MASK = false # SERVER => CLIENTの場合はFalseでよし
+      frame.MASK = is_masked # SERVER => CLIENTの場合はFalseでよし
       frame.DATA = m # 送信データ
 
     elif length > 0 and length == index:
@@ -253,7 +284,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
       frame.OPCODE = Opcode.CONTINUATION
-      frame.MASK = false # SERVER => CLIENTの場合はFalseでよし
+      frame.MASK = is_masked # SERVER => CLIENTの場合はFalseでよし
       frame.DATA = m # 送信データ
 
     var stream = newStringStream()
@@ -316,10 +347,22 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
     # マスク
     if frame.MASK:
       # サーバーからの送信は基本マスクはしない
-      discard
+      var mask_key :seq[char] = generateMaskKey()
+      var masked_m :string
 
-    # ペイロード
-    stream.write(m)
+      # 結果のデータ[i] = 元のデータ[i] xor key [i mod 4]
+      for index in countup(0, m.len() - 1):
+        masked_m.add((m[index].uint8() xor mask_key[index mod 4].uint8()).char())
+      
+      stream.write(mask_key[0].uint8())
+      stream.write(mask_key[1].uint8())
+      stream.write(mask_key[2].uint8())
+      stream.write(mask_key[3].uint8())
+      stream.write(masked_m)
+    
+    else:
+      # ペイロード
+      stream.write(m)
 
     # 送信
     stream.setPosition(0)
@@ -330,7 +373,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       await ws.sendMessage("", 0x8) # Close
       raise newException(WebSocketOtherError, "データ送信時に未知のエラーが発生しました。")
 
-proc receiveFrame(ws: WebSocket): Future[Frame] {.async, gcsafe.} =
+proc receiveFrame(ws: WebSocket): Future[Frame] {.async.} =
   ##[
 
   ]##
@@ -365,9 +408,9 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async, gcsafe.} =
 
   let bytes_8_15: string = convertBinaryStrings(receive[1]) # 逐次2進数に変換して判定
   frame.MASK = bytes_8_15[0] == '1'
-  if not frame.MASK:
+  # if not frame.MASK:
     # マスクされていないフレームを受信した際には接続をCloseする
-    raise newException(NoMaskedFrameReceiveError, "マスクされていないフレームを受信しました。（$#）" % [$(bytes_8_15[0])])
+  #  raise newException(NoMaskedFrameReceiveError, "マスクされていないフレームを受信しました。（$#）" % [$(bytes_8_15[0])])
 
   # ペイロードの長さ
   frame.PAYLOAD_LENGTH = fromBin[int8]("0b" & bytes_8_15[1..7])
@@ -390,18 +433,23 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async, gcsafe.} =
     true_payload_length = uint8(payload_length)
 
   # マスクキー取得
-  frame.MASK_KEY = await ws.socket.recv(4)
-
+  if frame.MASK:
+    frame.MASK_KEY = await ws.socket.recv(4)
+  
   # 素のデータを引っ張ってくる
-  var result = await ws.socket.recv(int true_payload_length)
+  var data = await ws.socket.recv(int true_payload_length)
 
   # 非マスク化
-  for i in countup(0, result.len() - 1):
-    frame.DATA.add($(result[i].uint8 xor frame.MASK_KEY[i mod 4].uint8).char)
+  if frame.MASK:
+    for index in countup(0, data.len() - 1):
+      frame.DATA.add($(data[index].uint8() xor frame.MASK_KEY[index mod 4].uint8()).char())
+  else:
+    frame.DATA.add(data)
 
+  # echo(frame)
   return frame
 
-proc defaultPostMessageReceivedProcedure(ws: WebSocket, receive_result: ReceiveResult): bool =
+proc defaultPostMessageReceivedProcedure*(ws: WebSocket, receive_result: ReceiveResult): bool {.gcsafe.} =
   ##[
 
   ]##
@@ -431,9 +479,9 @@ proc receiveMessage*(ws: WebSocket, postMessageReceivedProcedure: proc (ws: WebS
     await ws.sendMessage("", 0x8) # Close
     raise newException(UnknownOpcodeReceiveError, "未知のOPCODEを持つデータを受信しました。")
   
-  except NoMaskedFrameReceiveError:
-    await ws.sendMessage("", 0x8) # Close
-    raise newException(NoMaskedFrameReceiveError, "マスクされていないデータを受信しました。")
+  #except NoMaskedFrameReceiveError:
+  #  await ws.sendMessage("", 0x8) # Close
+  #  raise newException(NoMaskedFrameReceiveError, "マスクされていないデータを受信しました。")
 
   except: # その他の例外をキャッチ
     await ws.sendMessage("", 0x8) # Close
@@ -465,6 +513,6 @@ proc receiveMessage*(ws: WebSocket, postMessageReceivedProcedure: proc (ws: WebS
     receive_result.OPCODE = Opcode.BINARY
 
   if not ws.postMessageReceivedProcedure(receive_result):
-    raise newException(WebSocketDatReceivedPostProcessError, "WebSocketデータ受信時の後処理（postMessageReceivedProcedure）でエラーが発生しています。")
+    raise newException(WebSocketDataReceivedPostProcessError, "WebSocketデータ受信時の後処理（postMessageReceivedProcedure）でエラーが発生しています。")
 
   return receive_result
