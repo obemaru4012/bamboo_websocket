@@ -5,7 +5,7 @@
 * 竹を割ったようにさっぱりとした実装を目指しています。
 * チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
 * Bambooの詳細な説明と利用方法についてはwikiに記載予定です。
-* [TODO] APIリファレンスはこちら。
+* 最新バージョンは**0.2.1**になります。
 * [README in English.](./README_en.md)
 
 #### 🖥Dependency
@@ -13,12 +13,11 @@
 
 #### 👩‍💻Setup
 ```bash
-$ nimble install bamboowebsocket
+$ nimble install bamboowebsocket@0.2.1
 ```
 
 #### 🤔Description
 * Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)での利用を想定しています。
-* 一般的な利用方法がexampleディレクトリ内で実装されています。
 
 #### 🤙Usage
 ##### 1. 🐥Echo Server
