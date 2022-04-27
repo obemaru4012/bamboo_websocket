@@ -5,32 +5,111 @@
 * 竹を割ったようにさっぱりとした実装を目指しています。
 * チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
 * Bambooの詳細な説明と利用方法についてはwikiに記載予定です。
-* [TODO] APIリファレンスはこちら。
-* [README in English.](./README_en.md)
+* 最新バージョンは**0.2.1**になります。
+* [TODO] [README in English.](./README_en.md)
 
 #### 🖥Dependency
-* requires "nim >= 1.4.8"
+`requires "nim >= 1.4.8"`
 
 #### 👩‍💻Setup
 ```bash
-$ nimble install bamboowebsocket
+$ nimble install bamboowebsocket@0.2.1
 ```
 
 #### 🤔Description
-* Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)やでの利用を想定しています。
-* 一般的な利用方法はexampleディレクトリ内で実装されています。
+* Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)での利用を想定しています。
 
 #### 🤙Usage
 ##### 1. 🐥Echo Server
-接続後にサーバが受信した文字列をクライアントにそのまま返します。
+1. 以下は、クライアントから受信したメッセージをエコーするサーバーです。
+
+```nim
+# echo_server.nim
+
+import asyncdispatch, 
+       asynchttpserver, 
+       asyncnet, 
+       httpcore, 
+       nativesockets, 
+       net, 
+       strutils, 
+       uri
+
+from bamboo_websocket/connection_status import ConnectionStatus
+from bamboo_websocket/opcode import Opcode
+from bamboo_websocket/websocket import WebSocket
+from bamboo_websocket/receive_result import ReceiveResult
+from bamboo_websocket/bamboo_websocket import 
+  loadServerSetting, 
+  openWebSocket, 
+  receiveMessage, 
+  sendMessage
+
+# ./setting.jsonをサーバーと同じ場所に配置
+var setting = loadServerSetting()
+
+proc callBack(request: Request) {.async, gcsafe.} =
+  var ws: WebSocket
+
+  if request.url.path == "/":
+    try:
+      ws = await openWebSocket(request, setting)
+    except:
+      discard
+
+    while ws.status == ConnectionStatus.OPEN:
+      try:
+        let receive = await ws.receiveMessage()
+
+        if receive.OPCODE == OpCode.TEXT:
+          echo("ID: ", ws.id, " echo back.")
+          await ws.sendMessage(receive.MESSAGE, 0x1)
+
+        if receive.OPCODE == OpCode.CLOSE:
+          echo("ID: ", ws.id, " has Closed.")
+          break
+
+      except:
+        ws.status = ConnectionStatus.CLOSED
+        ws.socket.close()
+
+    ws.socket.close()
+
+if isMainModule:
+  var server = newAsyncHttpServer()
+  waitFor server.serve(Port(9001), callBack)
+
+```
+
+2. サーバー用の設定ファイルを記述するjsonファイルをサーバーファイル（ehco_server.nim等）と同じ場所に配置する必要があります。
+```json
+{
+    "websocket_version" : "13",
+    "upgrade": "websocket",
+    "connection": "upgrade",
+    "websocket_key": "dGhlIHNhbXBsZSBub25jZQ==",
+    "magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
+    "mask_key_seeder": "514902776",
+}
+```
+
+3. ディレクトリ配置は以下の画像のようになります。
+![001](./images/001.png)
+
+4. echo_server.nimをコンパイル後に実行します。
+```bash
+$ nim c -r echo_server.nim
+```
+
+![002](./images/002.gif)
+
 
 #### 😏Advanced Usage
-##### 🐄Chat Server
-* Bamboo-WebSocket上でのチャットサーバーの概要です。
-* 部屋分け機能、プライベートチャット機能、チャット内容の保存機能が簡単に利用できます。
+##### 1. 🐄Chat Server
+[TODO]
 
-##### 🐭Game Server
-* [TODO]
+##### 2. 🐭Game Server
+[TODO]
 
 #### 📝Author
 * [omachi-satoshi](https://github.com/omachi-satoshi)

@@ -37,7 +37,7 @@ proc callBack(request: Request) {.async, gcsafe.} =
           for websocket in WebSockets:
             if websocket.id != ws.id:
               echo("$# => $#" % [$(ws.id), $(websocket.id)])
-              await websocket.sendMessage(receive.MESSAGE, 0x1, 3000, true)
+              await websocket.sendMessage(receive.MESSAGE, 0x1)
 
         if receive.OPCODE == OpCode.CLOSE:
           echo("ID: ", ws.id, " has Closed.")
