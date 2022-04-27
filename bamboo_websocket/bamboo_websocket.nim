@@ -100,19 +100,19 @@ proc loadServerSetting*(path="./setting.json"): TableRef[string, string] =
 
   return table
 
-proc defaultPreprocessProcedure*(ws: WebSocket, headers: HttpHeaders): bool {.gcsafe.}= 
+proc preProcessProc*(ws: WebSocket, headers: HttpHeaders): bool {.gcsafe.}= 
   ##[
   
   ]##
   return true
 
-proc defaultSubProtcolsProcedure*(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} = 
+proc subProtcolsProc*(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} = 
   ##[
 
   ]##
   return true
 
-proc defaultAdditionalProcedure*(ws: WebSocket): bool {.gcsafe.} = 
+proc postProcessProc*(ws: WebSocket): bool {.gcsafe.} = 
   ##[
 
   ]##
@@ -120,9 +120,9 @@ proc defaultAdditionalProcedure*(ws: WebSocket): bool {.gcsafe.} =
 
 proc openWebSocket*(request: Request,
                     setting: TableRef[string, string], 
-                    preProcessProcedure: proc (ws: WebSocket, headers: HttpHeaders): bool = defaultPreprocessProcedure,
-                    subProtcolsProcedure: proc (ws: WebSocket, sub_protocol: seq[string]): bool = defaultSubProtcolsProcedure,
-                    postProcessProcedure: proc (ws: WebSocket): bool = defaultAdditionalProcedure):
+                    preProcessProc: proc (ws: WebSocket, headers: HttpHeaders): bool = preProcessProc,
+                    subProtcolsProc: proc (ws: WebSocket, sub_protocol: seq[string]): bool = subProtcolsProc,
+                    postProcessProc: proc (ws: WebSocket): bool = postProcessProc):
                     Future[WebSocket] {.async.} =
   ##[
 
@@ -149,8 +149,8 @@ proc openWebSocket*(request: Request,
   var headers: HttpHeaders = request.headers
 
   # 高階関数 → 前処理
-  if not ws.preProcessProcedure(headers):
-    raise newException(WebSocketHandShakePreProcessError, "WebSocketハンドシェイク時の前処理（preProcessProcedure）でエラーが発生しています。")
+  if not ws.preProcessProc(headers):
+    raise newException(WebSocketHandShakePreProcessError, "WebSocketハンドシェイク時の前処理（preProcessProc）でエラーが発生しています。")
 
   # Sec-WebSocket-Version: 現行の「13」ではない場合×
   if not headers.hasKey("sec-websocket-version"): 
@@ -214,8 +214,8 @@ proc openWebSocket*(request: Request,
       ws.sec_websocket_protocol = sub_protocol[sub_protocol.low()]
     
     # Sec-WebSocket-Protocolの値に基づいて独自の処理を行う
-    if not ws.subProtcolsProcedure(sub_protocol):
-      raise newException(WebSocketHandShakeSubProtcolsProcedureError, "WebSocketハンドシェイク時の独自処理（subProtcolsProcedure）でエラーが発生しています。")
+    if not ws.subProtcolsProc(sub_protocol):
+      raise newException(WebSocketHandShakeSubProtcolsProcedureError, "WebSocketハンドシェイク時の独自処理（subProtcolsProc）でエラーが発生しています。")
 
   # お尻に改行コード追加
   response.add("\n")
@@ -227,8 +227,8 @@ proc openWebSocket*(request: Request,
     raise newException(WebSocketOtherError, "WebSocketハンドシェイクレスポンスの送信でエラーが発生しています。")
 
   # 高階関数 → 追加処理
-  if not ws.postProcessProcedure():
-    raise newException(WebSocketHandShakePostProcessProcedureError, "WebSocketハンドシェイク時の後処理（postProcessProcedure）でエラーが発生しています。")
+  if not ws.postProcessProc():
+    raise newException(WebSocketHandShakePostProcessProcedureError, "WebSocketハンドシェイク時の後処理（postProcessProc）でエラーが発生しています。")
 
   ws.id = $(genOid())
   ws.status = ConnectionStatus.OPEN # ここでOPENに設定しておき、「newAsyncHttpServer」で回す
@@ -240,7 +240,8 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
 
   ]##
   # 1回に送信するデータ量ごとに分割する。デフォルトはおおよそ10KB分の文字数。
-  var messages = convertRuneSequence(message, per_length)
+  var messages: seq[string]
+  messages = convertRuneSequence(message, per_length)
 
   if ws.status != ConnectionStatus.OPEN: 
     raise newException(WebSocketOtherError, "端点との接続が確立されていません。")
@@ -449,13 +450,13 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async.} =
   # echo(frame)
   return frame
 
-proc defaultPostMessageReceivedProcedure*(ws: WebSocket, receive_result: ReceiveResult): bool {.gcsafe.} =
+proc postMessageReceivedProc*(ws: WebSocket, receive_result: ReceiveResult): bool {.gcsafe.} =
   ##[
 
   ]##
   return true
 
-proc receiveMessage*(ws: WebSocket, postMessageReceivedProcedure: proc (ws: WebSocket, receive_result: ReceiveResult): bool = defaultPostMessageReceivedProcedure): Future[ReceiveResult] {.async.} =
+proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket, receive_result: ReceiveResult): bool = postMessageReceivedProc): Future[ReceiveResult] {.async.} =
   ##[
 
   ]##
@@ -512,7 +513,7 @@ proc receiveMessage*(ws: WebSocket, postMessageReceivedProcedure: proc (ws: WebS
     # [TODO] いつか実装したいね
     receive_result.OPCODE = Opcode.BINARY
 
-  if not ws.postMessageReceivedProcedure(receive_result):
+  if not ws.postMessageReceivedProc(receive_result):
     raise newException(WebSocketDataReceivedPostProcessError, "WebSocketデータ受信時の後処理（postMessageReceivedProcedure）でエラーが発生しています。")
 
   return receive_result
