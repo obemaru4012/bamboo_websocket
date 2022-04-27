@@ -11,13 +11,19 @@
 #### 🖥Dependency
 `requires "nim >= 1.4.8"`
 
+---
+
 #### 👩‍💻Setup
 ```bash
 $ nimble install bamboowebsocket@0.2.1
 ```
 
+---
+
 #### 🤔Description
 * Nim標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)での利用を想定しています。
+
+---
 
 #### 🤙Usage
 ##### 🐥Echo Server
@@ -103,6 +109,8 @@ $ nim c -r echo_server.nim
 
 ![002](https://user-images.githubusercontent.com/88951380/165452764-32cb29a6-a2e3-42f9-a5a5-5926d57a462a.gif)
 
+---
+
 #### 😏Advanced Usage
 ##### 🐄Chat Server
 [TODO]
@@ -110,9 +118,13 @@ $ nim c -r echo_server.nim
 ##### 🐭Game Server
 [TODO]
 
+---
+
 #### 📝Author
 * [omachi-satoshi](https://github.com/omachi-satoshi)
 * [obemaru4012](https://github.com/obemaru4012)
+
+---
 
 #### 📖References
 * [RFC 6455 - The WebSocket Protocol （日本語訳）](https://triple-underscore.github.io/RFC6455-ja.html)
