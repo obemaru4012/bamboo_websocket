@@ -6,7 +6,7 @@
 * チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
 * Bambooの詳細な説明と利用方法についてはwikiに記載予定です。
 * 最新バージョンは**0.2.1**になります。
-* [TODO] [README in English.](./README_en.md)
+* [README in English.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README_en.md)
   
   
 #### 🖥Dependency
@@ -96,6 +96,7 @@ if isMainModule:
     "mask_key_seeder": "514902776",
 }
 ```
+  
   
 * ディレクトリ配置は以下の画像のようになります。
 ![001](https://user-images.githubusercontent.com/88951380/165452751-9cb833f9-2214-4ea6-bde0-1818e1127d57.png)
