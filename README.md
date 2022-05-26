@@ -5,7 +5,7 @@
 * 竹を割ったようにさっぱりとした実装を目指しています。
 * チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
 * Bambooの詳細な説明と利用方法についてはwikiに記載予定です。
-* 最新バージョンは**0.2.1**になります。
+* 最新バージョンは**0.2.3**になります。
 * [README in English.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README_en.md)
   
   
@@ -111,7 +111,94 @@ $ nim c -r echo_server.nim
   
 #### 😏Advanced Usage
 ##### 🐄Chat Server
-[TODO]
+* 以下は、各クライアント間でのチャットを実現するサーバーです。
+
+```nim
+# chat_server.nim
+
+import asyncdispatch, 
+       asynchttpserver, 
+       asyncnet, 
+       httpcore, 
+       nativesockets, 
+       net, 
+       strutils, 
+       uri
+
+from bamboo_websocket/connection_status import ConnectionStatus
+from bamboo_websocket/opcode import Opcode
+from bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
+from bamboo_websocket/receive_result import ReceiveResult
+from bamboo_websocket/bamboo_websocket import 
+  handshake, 
+  loadServerSetting, 
+  openWebSocket, 
+  receiveMessage, 
+  sendMessage
+
+var setting = loadServerSetting()
+
+proc callBack(request: Request) {.async, gcsafe.} =
+  var ws = WebSocket()
+
+  if request.url.path == "/":
+    var ws: WebSocket
+    try:
+      ws = await openWebSocket(request, setting)
+      WebSockets.add(ws)
+      echo("ID: ", ws.id, " has Opned.")
+    except:
+      discard
+
+    while ws.status == ConnectionStatus.OPEN:
+      try:
+        let receive = await ws.receiveMessage()
+
+        if receive.OPCODE == OpCode.TEXT:
+          for websocket in WebSockets:
+            if websocket.id != ws.id:
+              echo("$# => $#" % [$(ws.id), $(websocket.id)])
+              await websocket.sendMessage(receive.MESSAGE, 0x1)
+
+        if receive.OPCODE == OpCode.CLOSE:
+          echo("ID: ", ws.id, " has Closed.")
+          break
+
+      except:
+        ws.status = ConnectionStatus.CLOSED
+        ws.socket.close()
+
+    WebSockets.delete(WebSockets.find(ws))
+    ws.socket.close()
+
+if isMainModule:
+  var server = newAsyncHttpServer()
+  waitFor server.serve(Port(9001), callBack)
+
+```
+  
+* サーバー用の設定ファイルを記述するjsonファイルをサーバーファイル（chat_server.nim等）と同じ場所に配置する必要があります。
+```json
+{
+    "websocket_version" : "13",
+    "upgrade": "websocket",
+    "connection": "upgrade",
+    "websocket_key": "dGhlIHNhbXBsZSBub25jZQ==",
+    "magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
+    "mask_key_seeder": "514902776",
+}
+```
+  
+  
+* ディレクトリ配置は以下の画像のようになります。
+![003](https://user-images.githubusercontent.com/88951380/170389013-6a198ede-a70a-425f-a5fe-d05c8af21594.png)
+
+* chat_server.nimをコンパイル後に実行します。
+```bash
+$ nim c -r chat_server.nim
+```
+  
+![004](https://user-images.githubusercontent.com/88951380/170388637-ad87a62a-b87f-4b7f-b1e6-e1996c4ec774.gif)
   
   
 ##### 🐭Game Server

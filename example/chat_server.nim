@@ -17,7 +17,6 @@ var setting = loadServerSetting()
 
 proc callBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
-  var counter: int = 1
 
   if request.url.path == "/":
     var ws: WebSocket
@@ -33,7 +32,6 @@ proc callBack(request: Request) {.async, gcsafe.} =
         let receive = await ws.receiveMessage()
 
         if receive.OPCODE == OpCode.TEXT:
-          echo(counter, ": ", receive.OPCODE, "=" , receive.MESSAGE)
           for websocket in WebSockets:
             if websocket.id != ws.id:
               echo("$# => $#" % [$(ws.id), $(websocket.id)])

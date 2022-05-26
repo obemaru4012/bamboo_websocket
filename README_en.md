@@ -5,7 +5,7 @@
 * We aim for a refreshing implementation, like splitting bamboo.
 * The goal of this project is to make it easy to create chat and gaming servers.
 * A detailed description of Bamboo and how to use it will be included in the wiki.
-* The latest version is **0.2.1**.
+* The latest version is **0.2.3**.
 * [README in Japanese.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README.md)
   
 #### 🖥Dependency
@@ -110,7 +110,94 @@ $ nim c -r echo_server.nim
   
 #### 😏Advanced Usage
 ##### 🐄Chat Server
-[TODO]
+* The following code is a server that enables chatting between each client.
+
+```nim
+# chat_server.nim
+
+import asyncdispatch, 
+       asynchttpserver, 
+       asyncnet, 
+       httpcore, 
+       nativesockets, 
+       net, 
+       strutils, 
+       uri
+
+from bamboo_websocket/connection_status import ConnectionStatus
+from bamboo_websocket/opcode import Opcode
+from bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
+from bamboo_websocket/receive_result import ReceiveResult
+from bamboo_websocket/bamboo_websocket import 
+  handshake, 
+  loadServerSetting, 
+  openWebSocket, 
+  receiveMessage, 
+  sendMessage
+
+var setting = loadServerSetting()
+
+proc callBack(request: Request) {.async, gcsafe.} =
+  var ws = WebSocket()
+
+  if request.url.path == "/":
+    var ws: WebSocket
+    try:
+      ws = await openWebSocket(request, setting)
+      WebSockets.add(ws)
+      echo("ID: ", ws.id, " has Opned.")
+    except:
+      discard
+
+    while ws.status == ConnectionStatus.OPEN:
+      try:
+        let receive = await ws.receiveMessage()
+
+        if receive.OPCODE == OpCode.TEXT:
+          for websocket in WebSockets:
+            if websocket.id != ws.id:
+              echo("$# => $#" % [$(ws.id), $(websocket.id)])
+              await websocket.sendMessage(receive.MESSAGE, 0x1)
+
+        if receive.OPCODE == OpCode.CLOSE:
+          echo("ID: ", ws.id, " has Closed.")
+          break
+
+      except:
+        ws.status = ConnectionStatus.CLOSED
+        ws.socket.close()
+
+    WebSockets.delete(WebSockets.find(ws))
+    ws.socket.close()
+
+if isMainModule:
+  var server = newAsyncHttpServer()
+  waitFor server.serve(Port(9001), callBack)
+
+```
+  
+* A json file describing the configuration file for the server must be placed in the same location as the server file (e.g. chat_server.nim)。
+```json
+{
+    "websocket_version" : "13",
+    "upgrade": "websocket",
+    "connection": "upgrade",
+    "websocket_key": "dGhlIHNhbXBsZSBub25jZQ==",
+    "magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
+    "mask_key_seeder": "514902776",
+}
+```
+  
+  
+* The directory arrangement is shown in the following image.
+![003](https://user-images.githubusercontent.com/88951380/170389013-6a198ede-a70a-425f-a5fe-d05c8af21594.png)
+
+* Run chat_server.nim after compilation.
+```bash
+$ nim c -r chat_server.nim
+```
+  
+![004](https://user-images.githubusercontent.com/88951380/170388637-ad87a62a-b87f-4b7f-b1e6-e1996c4ec774.gif)
   
   
 ##### 🐭Game Server
