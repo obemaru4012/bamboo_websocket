@@ -7,11 +7,11 @@ import asyncdispatch,
        strutils, 
        uri
 
-from ../bamboo_websocket/connection_status import ConnectionStatus
-from ../bamboo_websocket/opcode import Opcode
-from ../bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
-from ../bamboo_websocket/receive_result import ReceiveResult
-from ../bamboo_websocket/bamboo_websocket import 
+from bamboo_websocket/connection_status import ConnectionStatus
+from bamboo_websocket/opcode import Opcode
+from bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
+from bamboo_websocket/receive_result import ReceiveResult
+from bamboo_websocket/bamboo_websocket import 
   handshake, 
   loadServerSetting, 
   openWebSocket, 

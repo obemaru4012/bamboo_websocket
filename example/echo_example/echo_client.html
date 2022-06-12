@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
   </head>
-  <body class="bg-light">
+  <body id="body" class="bg-light">
 
     <div class="container pl-0 pr-0">
       <nav class="navbar navbar-dark bg-dark mb-2">
@@ -29,10 +29,12 @@
       </nav>
     </div>
 
-    <div class="container overflow-scroll" style="margin-bottom: 80px;">
+    <div class="container overflow-scroll">
       <p class="lead">Bamboo WebSocket Sample Echo Chat🐼へようこそ</p>
 
-      <div id="comments" class="container"></div>
+      <div id="message_container" class="container" style="padding-bottom: 70px;">
+        <div id="comments" class="container"></div>
+      </div>
 
     </div>
 
@@ -115,6 +117,10 @@
         var elem = echo_message_box(event)
         var comments = document.getElementById("comments");
         comments.appendChild(elem);
+        // 最下部に移動
+        window.scroll(0, document.documentElement.clientHeight);
+        // フォーカス合わせ
+        document.getElementById("m").focus()
       }
 
       const on_close = (event) => {
