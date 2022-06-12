@@ -1,10 +1,10 @@
 # Package
 
-version       = "0.2.1"
+version       = "0.2.3"
 author        = "obemaru4012"
 description   = "This is a simple implementation of a WebSocket server with 100% Nim."
 license       = "MIT"
-skipDirs      = @["tests", "example", "images", "tests"]
+skipDirs      = @["tests", "images"]
 
 # Dependencies
 
