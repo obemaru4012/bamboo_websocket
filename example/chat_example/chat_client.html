@@ -37,7 +37,7 @@
       
       <div class="container fixed-bottom bg-dark">
         <div id="form" class="row p-3">
-          <input id="m" class="col-9" type="text" class="form-control" autocomplete="off"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
+          <input id="m" class="col-9" type="text" class="form-control" autocomplete="off" placeholder="Shift + Enter => Send"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
         </div>
       </div>
 
@@ -293,6 +293,15 @@
         elem.appendChild(elem_right);
         return elem;
       }
+
+      const m = document.getElementById('m');
+      m.addEventListener('keydown', function (e) {
+          const code = e.which || e.keyCode;
+          if(code === 13 && e.shiftKey) 
+          {
+            send_message();
+          }
+      });
 
     </script>
 
