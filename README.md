@@ -5,7 +5,7 @@
 * 竹を割ったようにさっぱりとした実装を目指しています。
 * チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
 * Bambooの詳細な説明と利用方法についてはwikiに記載予定です。
-* 最新バージョンは**0.2.3**になります。
+* 最新バージョンは**0.2.4**になります。
 * [README in English.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README_en.md)
   
   
@@ -15,7 +15,7 @@
   
 #### 👩‍💻Setup
 ```bash
-$ nimble install bamboowebsocket@0.2.3
+$ nimble install bamboowebsocket@0.2.4
 ```
   
   
@@ -177,7 +177,7 @@ if isMainModule:
 
 ```
   
-* サーバー用の設定ファイルを記述するjsonファイルをサーバーファイル（chat_server.nim等）と同じ場所に配置する必要があります。
+* サーバー用の設定ファイルを記述するjsonファイル（setting.json）をサーバーファイル（chat_server.nim等）と同じ場所に配置する必要があります。
 ```json
 {
     "websocket_version" : "13",
@@ -190,8 +190,6 @@ if isMainModule:
 ```
   
   
-* ディレクトリ配置は以下の画像のようになります。
-![003](https://user-images.githubusercontent.com/88951380/170389013-6a198ede-a70a-425f-a5fe-d05c8af21594.png)
 
 * chat_server.nimをコンパイル後に実行します。
 ```bash

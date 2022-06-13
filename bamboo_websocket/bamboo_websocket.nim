@@ -136,7 +136,7 @@ proc openWebSocket*(request: Request,
     socket: nil,
     status: ConnectionStatus.INITIAl,
     sec_websocket_accept: "",
-    sec_websocket_protocol: "",
+    sec_websocket_protocol: @[],
     version: "",
     upgrade: "",
     connection: "",
@@ -208,11 +208,8 @@ proc openWebSocket*(request: Request,
     var sub_protocol = getHeaderValues(headers, "Sec-WebSocket-Protocol")
     response.add("Sec-Websocket-Protocol: " & sub_protocol[sub_protocol.low()] & "\n")
 
-    if sub_protocol.len() > 1:
-      ws.sec_websocket_protocol = join(sub_protocol, ", ")
-    else:
-      ws.sec_websocket_protocol = sub_protocol[sub_protocol.low()]
-    
+    ws.sec_websocket_protocol = sub_protocol
+
     # Sec-WebSocket-Protocolの値に基づいて独自の処理を行う
     if not ws.subProtcolsProc(sub_protocol):
       raise newException(WebSocketHandShakeSubProtcolsProcedureError, "WebSocketハンドシェイク時の独自処理（subProtcolsProc）でエラーが発生しています。")

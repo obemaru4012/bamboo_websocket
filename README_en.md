@@ -5,7 +5,7 @@
 * We aim for a refreshing implementation, like splitting bamboo.
 * The goal of this project is to make it easy to create chat and gaming servers.
 * A detailed description of Bamboo and how to use it will be included in the wiki.
-* The latest version is **0.2.3**.
+* The latest version is **0.2.4**.
 * [README in Japanese.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README.md)
   
 #### 🖥Dependency
@@ -14,7 +14,7 @@
   
 #### 👩‍💻Setup
 ```bash
-$ nimble install bamboowebsocket@0.2.3
+$ nimble install bamboowebsocket@0.2.4
 ```
   
   
@@ -176,7 +176,7 @@ if isMainModule:
 
 ```
   
-* A json file describing the configuration file for the server must be placed in the same location as the server file (e.g. chat_server.nim)。
+* A json file（setting.json） describing the configuration file for the server must be placed in the same location as the server file (e.g. chat_server.nim)。
 ```json
 {
     "websocket_version" : "13",
@@ -189,8 +189,6 @@ if isMainModule:
 ```
   
   
-* The directory arrangement is shown in the following image.
-![003](https://user-images.githubusercontent.com/88951380/170389013-6a198ede-a70a-425f-a5fe-d05c8af21594.png)
 
 * Run chat_server.nim after compilation.
 ```bash
