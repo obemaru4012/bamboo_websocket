@@ -104,7 +104,65 @@
       </div>
     </div>
 
+    <div class="modal fade" data-backdrop="false" id="tag_select_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="label1">ユーザ－アイコンを選択してください</h5>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <select id="tag" class="form-control">
+                <option value="1">🐼</option>
+                <option value="2">👻</option>
+                <option value="3">🐱</option>
+                <option value="4">🐷</option>
+                <option value="5">🐌</option>
+                <option value="6">🐧</option>
+                <option value="7">🐸</option>
+                <option value="8">🐎</option>
+                <option value="9">🦥</option>
+                <option value="10">🐥</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-info" data-dismiss="modal">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
+
+      const tags = {
+        "1": "🐼",
+        "2": "👻",
+        "3": "🐱",
+        "4": "🐷",
+        "5": "🐌",
+        "6": "🐧",
+        "7": "🐸",
+        "8": "🐎",
+        "9": "🦥",
+        "10": "🐥",
+      };
+      
+      var socket = null;
+
+      // タグ選択モーダル表示
+      $("#tag_select_modal").modal('show');
+      
+      // タグ選択モーダルが閉じるときにコールバック処理
+      $("#tag_select_modal").on('hidden.bs.modal', function (e) {
+        // 接続処理
+        var tag = document.getElementById("tag").value;
+
+        socket = new WebSocket("ws://localhost:9001", ["chat", tag]);
+        socket.onopen = on_open
+        socket.onmessage = on_message
+        socket.onclose = on_close
+      })
 
       const on_open = (event) => {
         $("#launch_modal").modal('show');
@@ -124,27 +182,6 @@
         $("#disconnect_modal").modal('show');
       }
 
-      var socket = null;
-      socket = new WebSocket("ws://localhost:9001", ["chat"]);
-
-      /**
-      * ソケット通信の接続が成功したとき
-      * @type {event} event
-      */
-      socket.onopen = on_open
-
-      /**
-      * サーバーからのメッセージを受信したとき
-      * @type {event} event
-      */
-      socket.onmessage = on_message
-
-      /**
-      * サーバーとの接続が切れたとき
-      * @type {event} event
-      */
-      socket.onclose = on_close
-
       /**
       * サーバーにメッセージを送信する
       * @type {event} event
@@ -152,10 +189,11 @@
       const send_message = () => 
       {
         const message = document.getElementById("m");
+        const tag = document.getElementById("tag").value;
         if(message.value.trim() != "") 
         { 
           socket.send(message.value);
-          var elem = self_message_box(message);
+          var elem = self_message_box(message, tag);
           var comments = document.getElementById("comments");
           comments.appendChild(elem);
           message.value = "";
@@ -196,7 +234,7 @@
       * 自身がメッセージを送信した際に画面上に表示する
       * メッセージボックスを表示させる
       */
-      const self_message_box = (message) =>
+      const self_message_box = (message, tag) =>
       {
         var elem = document.createElement('div');
         elem.classList.add('row');
@@ -214,7 +252,7 @@
         elem_right.classList.add('border-info');
         elem_right.classList.add('rounded');
         elem_right.classList.add('p-3');
-        elem_right.textContent = message.value;
+        elem_right.textContent = `${tags[tag]}: ${message.value}`;
 
         elem.appendChild(elem_left);
         elem.appendChild(elem_right);
@@ -240,7 +278,13 @@
         elem_left.classList.add('border-info');
         elem_left.classList.add('rounded');
         elem_left.classList.add('p-3');
-        elem_left.textContent = event.data;
+
+        // メッセージのパース
+        var data = JSON.parse(event.data);
+        var name = tags[data[0].name];
+        var message = data[0].message;
+
+        elem_left.textContent = `${name}: ${message}`;
         
         var elem_right = document.createElement('div');
         elem_right.classList.add('col-6');
