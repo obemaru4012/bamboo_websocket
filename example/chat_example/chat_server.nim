@@ -6,6 +6,7 @@ import asyncdispatch,
        nativesockets, 
        net, 
        strutils, 
+       tables,
        uri
 
 from bamboo_websocket/connection_status import ConnectionStatus
@@ -14,15 +15,15 @@ from bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
 from bamboo_websocket/receive_result import ReceiveResult
 from bamboo_websocket/bamboo_websocket import handshake, loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
+var setting = loadServerSetting()
+
 proc subProtcolsProc(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} = 
   ##[
 
   ]##
   # 送信されてきたタグをWebSokcetの識別子に変更
-  ws.name = sub_protocol[1]
+  ws.optional_data["name"] = $(sub_protocol[1])
   return true
-
-var setting = loadServerSetting()
 
 proc callBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
@@ -32,7 +33,7 @@ proc callBack(request: Request) {.async, gcsafe.} =
     try:
       ws = await openWebSocket(request, setting, subProtcolsProc=subProtcolsProc)
       WebSockets.add(ws)
-      echo("ID: ", ws.id, ", Tag: ", ws.name, " has Opened.")
+      echo("ID: ", ws.id, ", Tag: ", ws.optional_data["name"], " has Opened.")
     except:
       discard
 
@@ -40,15 +41,14 @@ proc callBack(request: Request) {.async, gcsafe.} =
       try:
         let receive = await ws.receiveMessage()
         if receive.OPCODE == OpCode.TEXT:
-          var message: string = $(%* [{"name": ws.name, "message": receive.MESSAGE}])
-          echo(message)
+          var message: string = $(%* [{"name": ws.optional_data["name"], "message": receive.MESSAGE}])
           for websocket in WebSockets:
             if websocket.id != ws.id:
               echo("$# => $#" % [$(ws.id), $(websocket.id)])
               await websocket.sendMessage(message, 0x1)
 
         if receive.OPCODE == OpCode.CLOSE:
-          echo("ID: ", ws.id, ", Tag: ", ws.name, " has Closed.")
+          echo("ID: ", ws.id, " has Closed.")
           break
 
       except:
