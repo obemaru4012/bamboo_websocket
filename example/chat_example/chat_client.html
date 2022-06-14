@@ -158,7 +158,7 @@
         // 接続処理
         var tag = document.getElementById("tag").value;
 
-        socket = new WebSocket("ws://localhost:9001", ["chat", tag]);
+        socket = new WebSocket("ws://localhost:9001/chat", ["chat", tag]);
         socket.onopen = on_open
         socket.onmessage = on_message
         socket.onclose = on_close
@@ -221,7 +221,7 @@
       const connect_socket = (sub_protocol=["chat"]) =>
       {
         try {
-          socket = new WebSocket("ws://localhost:9001", sub_protocol);
+          socket = new WebSocket("ws://localhost:9001/chat", sub_protocol);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
