@@ -129,10 +129,6 @@ proc openWebSocket*(request: Request,
   ]##
   var ws = WebSocket(
     id: "",
-    name: "",
-    group_id: "",
-    group_name: "",
-    is_parent: false,
     socket: nil,
     status: ConnectionStatus.INITIAl,
     sec_websocket_accept: "",
@@ -140,6 +136,7 @@ proc openWebSocket*(request: Request,
     version: "",
     upgrade: "",
     connection: "",
+    optional_data: initTable[string, string]()
   )
 
   # ハンドシェイク開始
