@@ -27,7 +27,7 @@ var setting = loadServerSetting()
 proc callBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
 
-  if request.url.path == "/":
+  if request.url.path == "/chat":
     var ws: WebSocket
     try:
       ws = await openWebSocket(request, setting, subProtcolsProc=subProtcolsProc)
