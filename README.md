@@ -5,7 +5,7 @@
 * 竹を割ったようにさっぱりとした実装を目指しています。
 * チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
 * Bambooの詳細な説明と利用方法についてはwikiに記載予定です。
-* 最新バージョンは**0.2.4**になります。
+* 最新バージョンは**0.3.0**になります。
 * [README in English.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README_en.md)
   
   
@@ -15,7 +15,7 @@
   
 #### 👩‍💻Setup
 ```bash
-$ nimble install bamboowebsocket@0.2.4
+$ nimble install bamboowebsocket@0.3.0
 ```
   
   
@@ -128,7 +128,7 @@ import asyncdispatch,
 
 from bamboo_websocket/connection_status import ConnectionStatus
 from bamboo_websocket/opcode import Opcode
-from bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
+from bamboo_websocket/websocket import WebSocket
 from bamboo_websocket/receive_result import ReceiveResult
 from bamboo_websocket/bamboo_websocket import handshake, loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
@@ -141,6 +141,7 @@ proc subProtcolsProc(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} 
   return true
 
 var setting = loadServerSetting()
+var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()

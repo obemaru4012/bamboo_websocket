@@ -15,7 +15,7 @@ import asyncdispatch,
        uri
 
 from opcode import OpCode
-from websocket import WebSocket, WebSockets
+from websocket import WebSocket
 from receive_result import ReceiveResult
 from bamboo_websocket import 
   handshake,

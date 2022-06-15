@@ -5,7 +5,7 @@
 * We aim for a refreshing implementation, like splitting bamboo.
 * The goal of this project is to make it easy to create chat and gaming servers.
 * A detailed description of Bamboo and how to use it will be included in the wiki.
-* The latest version is **0.2.4**.
+* The latest version is **0.3.0**.
 * [README in Japanese.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README.md)
   
 #### 🖥Dependency
@@ -14,7 +14,7 @@
   
 #### 👩‍💻Setup
 ```bash
-$ nimble install bamboowebsocket@0.2.4
+$ nimble install bamboowebsocket@0.3.0
 ```
   
   
@@ -97,8 +97,6 @@ if isMainModule:
 ```
   
   
-* The directory arrangement is shown in the following image.
-![001](https://user-images.githubusercontent.com/88951380/165452751-9cb833f9-2214-4ea6-bde0-1818e1127d57.png)
 
 * Run echo_server.nim after compilation.
 ```bash
@@ -127,7 +125,7 @@ import asyncdispatch,
 
 from bamboo_websocket/connection_status import ConnectionStatus
 from bamboo_websocket/opcode import Opcode
-from bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
+from bamboo_websocket/websocket import WebSocket
 from bamboo_websocket/receive_result import ReceiveResult
 from bamboo_websocket/bamboo_websocket import handshake, loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
@@ -140,6 +138,7 @@ proc subProtcolsProc(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} 
   return true
 
 var setting = loadServerSetting()
+var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
