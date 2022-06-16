@@ -41,14 +41,13 @@ import asyncdispatch,
 from bamboo_websocket/connection_status import ConnectionStatus
 from bamboo_websocket/opcode import Opcode
 from bamboo_websocket/websocket import WebSocket
-from bamboo_websocket/receive_result import ReceiveResult
 from bamboo_websocket/bamboo_websocket import 
+  handshake, 
   loadServerSetting, 
   openWebSocket, 
   receiveMessage, 
   sendMessage
 
-# ./setting.jsonをサーバーと同じ場所に配置
 var setting = loadServerSetting()
 
 proc callBack(request: Request) {.async, gcsafe.} =
@@ -64,11 +63,11 @@ proc callBack(request: Request) {.async, gcsafe.} =
       try:
         let receive = await ws.receiveMessage()
 
-        if receive.OPCODE == OpCode.TEXT:
+        if receive[0] == OpCode.TEXT:
           echo("ID: ", ws.id, " echo back.")
-          await ws.sendMessage(receive.MESSAGE, 0x1)
+          await ws.sendMessage(receive[1], 0x1, 3000, true)
 
-        if receive.OPCODE == OpCode.CLOSE:
+        if receive[0] == OpCode.CLOSE:
           echo("ID: ", ws.id, " has Closed.")
           break
 
@@ -121,24 +120,24 @@ import asyncdispatch,
        nativesockets, 
        net, 
        strutils, 
+       tables,
        uri
 
 from bamboo_websocket/connection_status import ConnectionStatus
 from bamboo_websocket/opcode import Opcode
 from bamboo_websocket/websocket import WebSocket
-from bamboo_websocket/receive_result import ReceiveResult
 from bamboo_websocket/bamboo_websocket import handshake, loadServerSetting, openWebSocket, receiveMessage, sendMessage
+
+var setting = loadServerSetting()
+var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc subProtcolsProc(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} = 
   ##[
 
   ]##
   # 送信されてきたタグをWebSokcetの識別子に変更
-  ws.name = sub_protocol[1]
+  ws.optional_data["name"] = $(sub_protocol[1])
   return true
-
-var setting = loadServerSetting()
-var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
@@ -148,23 +147,22 @@ proc callBack(request: Request) {.async, gcsafe.} =
     try:
       ws = await openWebSocket(request, setting, subProtcolsProc=subProtcolsProc)
       WebSockets.add(ws)
-      echo("ID: ", ws.id, ", Tag: ", ws.name, " has Opened.")
+      echo("ID: ", ws.id, ", Tag: ", ws.optional_data["name"], " has Opened.")
     except:
       discard
 
     while ws.status == ConnectionStatus.OPEN:
       try:
         let receive = await ws.receiveMessage()
-        if receive.OPCODE == OpCode.TEXT:
-          var message: string = $(%* [{"name": ws.name, "message": receive.MESSAGE}])
-          echo(message)
+        if receive[0] == OpCode.TEXT:
+          var message: string = $(%* [{"name": ws.optional_data["name"], "message": receive[1]}])
           for websocket in WebSockets:
             if websocket.id != ws.id:
               echo("$# => $#" % [$(ws.id), $(websocket.id)])
               await websocket.sendMessage(message, 0x1)
 
-        if receive.OPCODE == OpCode.CLOSE:
-          echo("ID: ", ws.id, ", Tag: ", ws.name, " has Closed.")
+        if receive[0] == OpCode.CLOSE:
+          echo("ID: ", ws.id, " has Closed.")
           break
 
       except:

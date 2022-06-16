@@ -26,7 +26,6 @@ from errors import
 from connection_status import ConnectionStatus
 from frame import Frame
 from opcode import Opcode
-from receive_result import ReceiveResult
 from websocket import WebSocket
 from ./private/utilities import 
   convertBinaryStrings, 
@@ -444,28 +443,30 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async.} =
   # echo(frame)
   return frame
 
-proc postMessageReceivedProc*(ws: WebSocket, receive_result: ReceiveResult): bool {.gcsafe.} =
+proc postMessageReceivedProc*(ws: WebSocket, receive_result: tuple[opcode: OpCode, message: string]): bool {.gcsafe.} =
   ##[
 
   ]##
   return true
 
-proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket, receive_result: ReceiveResult): bool = postMessageReceivedProc): Future[ReceiveResult] {.async.} =
+proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket, receive_result: tuple[opcode: Opcode, message: string]): bool = postMessageReceivedProc): Future[tuple[opcode: Opcode, message: string]] {.async.} =
   ##[
 
   ]##
-  var receive_result = ReceiveResult()
+  var receive_result: tuple[opcode: Opcode, message: string]
+  var code: Opcode
+  var message: string
+
   var frame = Frame()
   try:
     frame = await ws.receiveFrame()
-    receive_result.OPCODE = frame.Opcode
-    receive_result.MESSAGE &= frame.DATA
+    message &= frame.DATA
 
     while frame.FIN == false:
       frame = await ws.receiveFrame()
       # 結果は逐一保存
-      receive_result.OPCODE = frame.Opcode
-      receive_result.MESSAGE &= frame.DATA
+      code = frame.Opcode
+      message &= frame.DATA
 
       if frame.Opcode != CONTINUATION:
         raise newException(UnknownOpcodeReceiveError, "継続以外のOpcodeを受信しました。（$#）" % [$(frame.Opcode)])
@@ -489,25 +490,25 @@ proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket
     await ws.sendMessage("", 0x8) # Close
     ws.status = ConnectionStatus.CLOSED
     ws.socket.close()
+    code = Opcode.CLOSE
 
   if frame.OPCODE == Opcode.PING:
     # PINGフレームを受信したら即座にPONGフレームを返す
     await ws.sendMessage("", 0xa)
-    receive_result.OPCODE = Opcode.PING
-    receive_result.MESSAGE = ""
+    code = Opcode.PING
 
   if frame.OPCODE == Opcode.PONG:
-    receive_result.OPCODE = Opcode.PONG
-    receive_result.MESSAGE = "Return Back PONG!!!"
+    code = Opcode.PONG
 
   if frame.OPCODE == Opcode.TEXT:
-    receive_result.OPCODE = Opcode.TEXT
+    code = Opcode.TEXT
 
   if frame.OPCODE == Opcode.BINARY:
     # [TODO] いつか実装したいね
-    receive_result.OPCODE = Opcode.BINARY
+    code = Opcode.BINARY
 
   if not ws.postMessageReceivedProc(receive_result):
     raise newException(WebSocketDataReceivedPostProcessError, "WebSocketデータ受信時の後処理（postMessageReceivedProcedure）でエラーが発生しています。")
 
+  receive_result = (code, message)
   return receive_result

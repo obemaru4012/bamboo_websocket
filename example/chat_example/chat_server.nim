@@ -12,7 +12,6 @@ import asyncdispatch,
 from bamboo_websocket/connection_status import ConnectionStatus
 from bamboo_websocket/opcode import Opcode
 from bamboo_websocket/websocket import WebSocket
-from bamboo_websocket/receive_result import ReceiveResult
 from bamboo_websocket/bamboo_websocket import handshake, loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()
@@ -41,14 +40,14 @@ proc callBack(request: Request) {.async, gcsafe.} =
     while ws.status == ConnectionStatus.OPEN:
       try:
         let receive = await ws.receiveMessage()
-        if receive.OPCODE == OpCode.TEXT:
-          var message: string = $(%* [{"name": ws.optional_data["name"], "message": receive.MESSAGE}])
+        if receive[0] == OpCode.TEXT:
+          var message: string = $(%* [{"name": ws.optional_data["name"], "message": receive[1]}])
           for websocket in WebSockets:
             if websocket.id != ws.id:
               echo("$# => $#" % [$(ws.id), $(websocket.id)])
               await websocket.sendMessage(message, 0x1)
 
-        if receive.OPCODE == OpCode.CLOSE:
+        if receive[0] == OpCode.CLOSE:
           echo("ID: ", ws.id, " has Closed.")
           break
 

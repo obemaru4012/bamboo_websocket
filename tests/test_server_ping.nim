@@ -16,7 +16,6 @@ import asyncdispatch,
 
 from opcode import OpCode
 from websocket import WebSocket
-from receive_result import ReceiveResult
 from bamboo_websocket import 
   handshake,
   openWebSocket, 
@@ -36,7 +35,7 @@ var setting = {
 
 proc sendMessageCallBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
-  var message {.global.} : ReceiveResult 
+  var message {.global.} : tuple[opcode: Opcode, message: string] 
   if request.url.path == "/":
     try:
       ws = await openWebSocket(request, setting)
@@ -52,5 +51,5 @@ suite "receive ping":
     var ws = waitFor handshake("localhost", 80, 9001, setting)
     waitFor ws.sendMessage("", 0x9, 1000, true)
     var r = waitFor ws.receiveMessage()
-    check r.OPCODE == OpCode.PONG
+    check r[0] == OpCode.PONG
 

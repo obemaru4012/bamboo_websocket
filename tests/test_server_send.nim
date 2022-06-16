@@ -15,7 +15,6 @@ import asyncdispatch,
        uri
 
 from websocket import WebSocket
-from receive_result import ReceiveResult
 from bamboo_websocket import 
   handshake,
   openWebSocket, 
@@ -50,4 +49,4 @@ suite "send message":
     var ws = waitFor handshake("localhost", 80, 9001, setting)
     let receive = waitFor ws.receiveMessage()
     server.close()
-    check $receive.MESSAGE == "ぶんぶんぶんなぐり！"
+    check $receive[1] == "ぶんぶんぶんなぐり！"
