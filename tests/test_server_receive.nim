@@ -14,8 +14,7 @@ import asyncdispatch,
        tables,
        uri
 
-from websocket import WebSocket
-from opcode import Opcode
+from websocket import WebSocket, Opcode
 from bamboo_websocket import 
   handshake,
   openWebSocket, 

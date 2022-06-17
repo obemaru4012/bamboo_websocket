@@ -129,6 +129,7 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-info" data-dismiss="modal">Enter</button>
           </div>
+          <input id="selected_tag" type="hidden" value="1">
         </div>
       </div>
     </div>
@@ -157,7 +158,7 @@
       $("#tag_select_modal").on('hidden.bs.modal', function (e) {
         // 接続処理
         var tag = document.getElementById("tag").value;
-
+        document.getElementById("selected_tag").value = tag;
         socket = new WebSocket("ws://localhost:9001/chat", ["chat", tag]);
         socket.onopen = on_open
         socket.onmessage = on_message
@@ -189,7 +190,7 @@
       const send_message = () => 
       {
         const message = document.getElementById("m");
-        const tag = document.getElementById("tag").value;
+        const tag = document.getElementById("selected_tag").value;
         if(message.value.trim() != "") 
         { 
           socket.send(message.value);
@@ -218,10 +219,11 @@
       /**
       * ソケット通信を開始する
       */
-      const connect_socket = (sub_protocol=["chat"]) =>
+      const connect_socket = () =>
       {
+        var tag = document.getElementById("selected_tag").value;
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", sub_protocol);
+          socket = new WebSocket("ws://localhost:9001/chat", ["chat", tag]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close

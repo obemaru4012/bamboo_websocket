@@ -15,7 +15,7 @@ import asyncdispatch,
        tables
 
 from errors import 
-  UnknownOpcodeReceiveError,
+  UnknownOpCodeReceiveError,
   WebSocketHandShakePreProcessError,
   WebSocketHandShakeSubProtcolsProcedureError,
   WebSocketHandShakePostProcessProcedureError,
@@ -24,8 +24,7 @@ from errors import
   WebSocketOtherError
 
 from frame import Frame
-from opcode import Opcode
-from websocket import WebSocket, ConnectionStatus
+from websocket import WebSocket, ConnectionStatus, OpCode
 from ./private/utilities import 
   convertBinaryStrings, 
   decodeHexStrings, 
@@ -247,7 +246,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV1 = false # 基本0
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
-      frame.OPCODE = Opcode(opcode)
+      frame.OPCODE = OpCode(opcode)
       frame.MASK = is_masked # SERVER => CLIENTの場合はFalse、CLIENT => SERVERの場合はTrueが基本線
       frame.DATA = m # 送信データ
 
@@ -257,7 +256,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV1 = false # 基本0
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
-      frame.OPCODE = Opcode(opcode)
+      frame.OPCODE = OpCode(opcode)
       frame.MASK = is_masked # SERVER => CLIENTの場合はFalseでよし
       frame.DATA = m # 送信データ
 
@@ -267,7 +266,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV1 = false # 基本0
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
-      frame.OPCODE = Opcode.CONTINUATION
+      frame.OPCODE = OpCode.CONTINUATION
       frame.MASK = is_masked # SERVER => CLIENTの場合はFalseでよし
       frame.DATA = m # 送信データ
 
@@ -276,7 +275,7 @@ proc sendMessage*(ws: WebSocket, message: string, opcode: uint8, per_length: int
       frame.RSV1 = false # 基本0
       frame.RSV2 = false # 基本0
       frame.RSV3 = false # 基本0
-      frame.OPCODE = Opcode.CONTINUATION
+      frame.OPCODE = OpCode.CONTINUATION
       frame.MASK = is_masked # SERVER => CLIENTの場合はFalseでよし
       frame.DATA = m # 送信データ
 
@@ -383,21 +382,21 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async.} =
   
   case bytes_0_7[4..7]
     of "0000":
-      frame.OPCODE = Opcode.CONTINUATION
+      frame.OPCODE = OpCode.CONTINUATION
     of "0001":
-      frame.OPCODE = Opcode.TEXT
+      frame.OPCODE = OpCode.TEXT
     of "0010":
-      frame.OPCODE = Opcode.BINARY
+      frame.OPCODE = OpCode.BINARY
     of "1000":
-      frame.OPCODE = Opcode.CLOSE
+      frame.OPCODE = OpCode.CLOSE
     of "1001":
-      frame.OPCODE = Opcode.PING
+      frame.OPCODE = OpCode.PING
     of "1010":
-      frame.OPCODE = Opcode.PONG
+      frame.OPCODE = OpCode.PONG
     else:
-      # 未知なOpcodeが受信された場合は接続をCloseする
+      # 未知なOpCodeが受信された場合は接続をCloseする
       ws.status = ConnectionStatus.CLOSING
-      raise newException(UnknownOpcodeReceiveError, "未知なOpcodeを受信しました。（$#）" % [$(bytes_0_7[4..7])])
+      raise newException(UnknownOpCodeReceiveError, "未知なOpCodeを受信しました。（$#）" % [$(bytes_0_7[4..7])])
 
   let bytes_8_15: string = convertBinaryStrings(receive[1]) # 逐次2進数に変換して判定
   frame.MASK = bytes_8_15[0] == '1'
@@ -448,12 +447,12 @@ proc postMessageReceivedProc*(ws: WebSocket, receive_result: tuple[opcode: OpCod
   ]##
   return true
 
-proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket, receive_result: tuple[opcode: Opcode, message: string]): bool = postMessageReceivedProc): Future[tuple[opcode: Opcode, message: string]] {.async.} =
+proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket, receive_result: tuple[opcode: OpCode, message: string]): bool = postMessageReceivedProc): Future[tuple[opcode: OpCode, message: string]] {.async.} =
   ##[
 
   ]##
-  var receive_result: tuple[opcode: Opcode, message: string]
-  var code: Opcode
+  var receive_result: tuple[opcode: OpCode, message: string]
+  var code: OpCode
   var message: string
 
   var frame = Frame()
@@ -464,15 +463,15 @@ proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket
     while frame.FIN == false:
       frame = await ws.receiveFrame()
       # 結果は逐一保存
-      code = frame.Opcode
+      code = frame.OpCode
       message &= frame.DATA
 
-      if frame.Opcode != CONTINUATION:
-        raise newException(UnknownOpcodeReceiveError, "継続以外のOpcodeを受信しました。（$#）" % [$(frame.Opcode)])
+      if frame.OpCode != CONTINUATION:
+        raise newException(UnknownOpCodeReceiveError, "継続以外のOpCodeを受信しました。（$#）" % [$(frame.OpCode)])
 
-  except UnknownOpcodeReceiveError:
+  except UnknownOpCodeReceiveError:
     await ws.sendMessage("", 0x8) # Close
-    raise newException(UnknownOpcodeReceiveError, "未知のOPCODEを持つデータを受信しました。")
+    raise newException(UnknownOpCodeReceiveError, "未知のOPCODEを持つデータを受信しました。")
   
   #except NoMaskedFrameReceiveError:
   #  await ws.sendMessage("", 0x8) # Close
@@ -482,29 +481,29 @@ proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket
     await ws.sendMessage("", 0x8) # Close
     raise newException(WebSocketOtherError, "データ受信時に未知のエラーが発生しました。")
 
-  # Opcodeで分岐させる
-  if frame.OPCODE == Opcode.CLOSE:
+  # OpCodeで分岐させる
+  if frame.OPCODE == OpCode.CLOSE:
     # Closeフレームを受信した端点は、それまでにCloseフレームを送信していなかったならば、
     # 応答として Close フレームを送信しなければならない。
     await ws.sendMessage("", 0x8) # Close
     ws.status = ConnectionStatus.CLOSED
     ws.socket.close()
-    code = Opcode.CLOSE
+    code = OpCode.CLOSE
 
-  if frame.OPCODE == Opcode.PING:
+  if frame.OPCODE == OpCode.PING:
     # PINGフレームを受信したら即座にPONGフレームを返す
     await ws.sendMessage("", 0xa)
-    code = Opcode.PING
+    code = OpCode.PING
 
-  if frame.OPCODE == Opcode.PONG:
-    code = Opcode.PONG
+  if frame.OPCODE == OpCode.PONG:
+    code = OpCode.PONG
 
-  if frame.OPCODE == Opcode.TEXT:
-    code = Opcode.TEXT
+  if frame.OPCODE == OpCode.TEXT:
+    code = OpCode.TEXT
 
-  if frame.OPCODE == Opcode.BINARY:
+  if frame.OPCODE == OpCode.BINARY:
     # [TODO] いつか実装したいね
-    code = Opcode.BINARY
+    code = OpCode.BINARY
 
   if not ws.postMessageReceivedProc(receive_result):
     raise newException(WebSocketDataReceivedPostProcessError, "WebSocketデータ受信時の後処理（postMessageReceivedProcedure）でエラーが発生しています。")
