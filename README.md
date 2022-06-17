@@ -39,9 +39,8 @@ import asyncdispatch,
        strutils, 
        uri
 
-from bamboo_websocket/connection_status import ConnectionStatus
 from bamboo_websocket/opcode import Opcode
-from bamboo_websocket/websocket import WebSocket
+from bamboo_websocket/websocket import WebSocket, ConnectionStatus
 from bamboo_websocket/bamboo_websocket import 
   handshake, 
   loadServerSetting, 
@@ -126,9 +125,8 @@ import asyncdispatch,
        tables,
        uri
 
-from bamboo_websocket/connection_status import ConnectionStatus
 from bamboo_websocket/opcode import Opcode
-from bamboo_websocket/websocket import WebSocket
+from bamboo_websocket/websocket import WebSocket, ConnectionStatus
 from bamboo_websocket/bamboo_websocket import handshake, loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()

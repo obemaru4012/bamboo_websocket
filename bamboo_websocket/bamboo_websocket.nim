@@ -23,10 +23,9 @@ from errors import
   WebSocketHandShakeHeaderError,
   WebSocketOtherError
 
-from connection_status import ConnectionStatus
 from frame import Frame
 from opcode import Opcode
-from websocket import WebSocket
+from websocket import WebSocket, ConnectionStatus
 from ./private/utilities import 
   convertBinaryStrings, 
   decodeHexStrings, 
