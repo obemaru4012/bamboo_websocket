@@ -14,8 +14,7 @@ import asyncdispatch,
        tables,
        uri
 
-from websocket import WebSocket, WebSockets
-from receive_result import ReceiveResult
+from websocket import WebSocket, Opcode
 from bamboo_websocket import 
   handshake,
   openWebSocket, 
@@ -35,12 +34,12 @@ var setting = {
 
 proc sendMessageCallBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
-  var message {.global.} : ReceiveResult 
+  var message {.global.} : tuple[opcode: Opcode, message: string]
   if request.url.path == "/":
     try:
       ws = await openWebSocket(request, setting)
       message = await ws.receiveMessage()
-      await ws.sendMessage(message.MESSAGE, 0x1, 1000, true)
+      await ws.sendMessage(message[1], 0x1, 1000, true)
     except:
       discard
 
@@ -52,5 +51,5 @@ suite "receive message":
     var ws = waitFor handshake("localhost", 80, 9001, setting)
     waitFor ws.sendMessage("ぶんぶんぶんなぐり！", 0x1, 1000, true)
     var r = waitFor ws.receiveMessage()
-    check r.MESSAGE == "ぶんぶんぶんなぐり！"
+    check r[1] == "ぶんぶんぶんなぐり！"
 

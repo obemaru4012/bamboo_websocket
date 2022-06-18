@@ -7,10 +7,7 @@ import asyncdispatch,
        strutils, 
        uri
 
-from bamboo_websocket/connection_status import ConnectionStatus
-from bamboo_websocket/opcode import Opcode
-from bamboo_websocket/websocket import WebSocket, WebSockets, WebSocketC
-from bamboo_websocket/receive_result import ReceiveResult
+from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
 from bamboo_websocket/bamboo_websocket import 
   handshake, 
   loadServerSetting, 
@@ -33,11 +30,11 @@ proc callBack(request: Request) {.async, gcsafe.} =
       try:
         let receive = await ws.receiveMessage()
 
-        if receive.OPCODE == OpCode.TEXT:
+        if receive[0] == OpCode.TEXT:
           echo("ID: ", ws.id, " echo back.")
-          await ws.sendMessage(receive.MESSAGE, 0x1, 3000, true)
+          await ws.sendMessage(receive[1], 0x1, 3000, true)
 
-        if receive.OPCODE == OpCode.CLOSE:
+        if receive[0] == OpCode.CLOSE:
           echo("ID: ", ws.id, " has Closed.")
           break
 

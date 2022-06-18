@@ -14,9 +14,7 @@ import asyncdispatch,
        tables,
        uri
 
-from opcode import OpCode
-from websocket import WebSocket, WebSockets
-from receive_result import ReceiveResult
+from websocket import WebSocket, OpCode
 from bamboo_websocket import 
   handshake,
   openWebSocket, 
@@ -36,7 +34,7 @@ var setting = {
 
 proc sendMessageCallBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
-  var message {.global.} : ReceiveResult 
+  var message {.global.} : tuple[opcode: Opcode, message: string]
   if request.url.path == "/":
     try:
       ws = await openWebSocket(request, setting)
@@ -52,5 +50,5 @@ suite "receive close":
     var ws = waitFor handshake("localhost", 80, 9001, setting)
     waitFor ws.sendMessage("", 0x8, 1000, true)
     var r = waitFor ws.receiveMessage()
-    check r.OPCODE == OpCode.CLOSE
+    check r[0] == OpCode.CLOSE
 

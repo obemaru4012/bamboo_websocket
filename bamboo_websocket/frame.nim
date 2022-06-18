@@ -22,7 +22,7 @@ Frame format:
      |                     Payload Data continued ...                |
      +---------------------------------------------------------------+
 ]##
-import opcode
+from websocket import OpCode
 
 type
   # フレームオブジェクト
