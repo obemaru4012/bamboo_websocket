@@ -22,8 +22,8 @@
         </button>
         <div class="collapse navbar-collapse" id="navmenu1">
           <div class="navbar-nav">
-            <a class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
-            <a class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
+            <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
+            <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
           </div>
         </div>
       </nav>
@@ -40,7 +40,7 @@
 
     <div class="container fixed-bottom bg-dark">
       <div id="form" class="row p-3">
-        <input id="m" class="col-9" type="text" class="form-control" autocomplete="off"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
+        <input id="m" class="col-9" type="text" class="form-control" autocomplete="off" placeholder="Shift + Enter => Send"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
       </div>
     </div>
 
@@ -109,7 +109,11 @@
 
     <script>
 
+      document.getElementById("close").style.pointerEvents = 'none';
+
       const on_open = (event) => {
+        document.getElementById("connect").style.pointerEvents = 'none';
+        document.getElementById("close").style.pointerEvents = 'auto';
         $("#launch_modal").modal('show');
       }
 
@@ -124,11 +128,13 @@
       }
 
       const on_close = (event) => {
+        document.getElementById("connect").style.pointerEvents = 'auto';
+        document.getElementById("close").style.pointerEvents = 'none';
         $("#disconnect_modal").modal('show');
       }
 
       var socket = null;
-      socket = new WebSocket("ws://localhost:9001", ["chat"]);
+      socket = new WebSocket("ws://localhost:9001/chat", ["chat"]);
 
       /**
       * ソケット通信の接続が成功したとき
@@ -190,7 +196,7 @@
       const connect_socket = (sub_protocol=["chat"]) =>
       {
         try {
-          socket = new WebSocket("ws://localhost:9001", sub_protocol);
+          socket = new WebSocket("ws://localhost:9001/chat", sub_protocol);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
@@ -264,6 +270,15 @@
         elem.appendChild(elem_right);
         return elem;
       }
+
+      const m = document.getElementById('m');
+      m.addEventListener('keydown', function (e) {
+          const code = e.which || e.keyCode;
+          if(code === 13 && e.shiftKey) 
+          {
+            send_message();
+          }
+      });
 
     </script>
 

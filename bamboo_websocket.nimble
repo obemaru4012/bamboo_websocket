@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.3.0"
+version       = "0.3.1"
 author        = "obemaru4012"
 description   = "This is a simple implementation of a WebSocket server with 100% Nim."
 license       = "MIT"

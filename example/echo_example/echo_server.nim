@@ -21,6 +21,11 @@ proc callBack(request: Request) {.async, gcsafe.} =
   var ws: WebSocket
 
   if request.url.path == "/":
+    let headers = {"Content-type": "text/html; charset=utf-8"}
+    let content = readFile("./echo_client.html")
+    await request.respond(Http200, content, headers.newHttpHeaders())
+
+  if request.url.path == "/chat":
     try:
       ws = await openWebSocket(request, setting)
     except:

@@ -25,6 +25,7 @@ from errors import
 
 from frame import Frame
 from websocket import WebSocket, ConnectionStatus, OpCode
+from bamboo_works import BambooWorks, initBambooWorks
 from ./private/utilities import 
   convertBinaryStrings, 
   decodeHexStrings, 
@@ -97,30 +98,12 @@ proc loadServerSetting*(path="./setting.json"): TableRef[string, string] =
 
   return table
 
-proc preProcessProc*(ws: WebSocket, headers: HttpHeaders): bool {.gcsafe.}= 
-  ##[
-  
-  ]##
-  return true
-
-proc subProtcolsProc*(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} = 
-  ##[
-
-  ]##
-  return true
-
-proc postProcessProc*(ws: WebSocket): bool {.gcsafe.} = 
-  ##[
-
-  ]##
-  return true
-
 proc openWebSocket*(request: Request,
                     setting: TableRef[string, string], 
-                    preProcessProc: proc (ws: WebSocket, headers: HttpHeaders): bool = preProcessProc,
-                    subProtcolsProc: proc (ws: WebSocket, sub_protocol: seq[string]): bool = subProtcolsProc,
-                    postProcessProc: proc (ws: WebSocket): bool = postProcessProc):
-                    Future[WebSocket] {.async.} =
+                    preProcess: proc(ws: WebSocket, works: BambooWorks): bool = proc(ws: WebSocket, works: BambooWorks): bool = true,
+                    subProtocolProcess: proc(ws: WebSocket, works: BambooWorks): bool = proc(ws: WebSocket, works: BambooWorks): bool = true,
+                    postProcess: proc(ws: WebSocket, works: BambooWorks): bool = proc(ws: WebSocket, works: BambooWorks): bool = true
+                    ): Future[WebSocket] {.async.} =
   ##[
 
   ]##
@@ -142,8 +125,15 @@ proc openWebSocket*(request: Request,
   # ハンドシェイクリクエスト解析
   var headers: HttpHeaders = request.headers
 
+  # 内部の各処理で利用するためのObject
+  # Nimにはメンバ変数が存在しないためtemplate methodのような使い方は不可
+  # → いい方法ないかなあ...
+  var works: BambooWorks = initBambooWorks()
+  works.headers = headers
+  works.setting = setting
+
   # 高階関数 → 前処理
-  if not ws.preProcessProc(headers):
+  if not ws.preProcess(works):
     raise newException(WebSocketHandShakePreProcessError, "WebSocketハンドシェイク時の前処理（preProcessProc）でエラーが発生しています。")
 
   # Sec-WebSocket-Version: 現行の「13」ではない場合×
@@ -203,9 +193,10 @@ proc openWebSocket*(request: Request,
     response.add("Sec-Websocket-Protocol: " & sub_protocol[sub_protocol.low()] & "\n")
 
     ws.sec_websocket_protocol = sub_protocol
+    works.sub_protocol = sub_protocol
 
     # Sec-WebSocket-Protocolの値に基づいて独自の処理を行う
-    if not ws.subProtcolsProc(sub_protocol):
+    if not ws.subProtocolProcess(works):
       raise newException(WebSocketHandShakeSubProtcolsProcedureError, "WebSocketハンドシェイク時の独自処理（subProtcolsProc）でエラーが発生しています。")
 
   # お尻に改行コード追加
@@ -218,7 +209,7 @@ proc openWebSocket*(request: Request,
     raise newException(WebSocketOtherError, "WebSocketハンドシェイクレスポンスの送信でエラーが発生しています。")
 
   # 高階関数 → 追加処理
-  if not ws.postProcessProc():
+  if not ws.postProcess(works):
     raise newException(WebSocketHandShakePostProcessProcedureError, "WebSocketハンドシェイク時の後処理（postProcessProc）でエラーが発生しています。")
 
   ws.id = $(genOid())

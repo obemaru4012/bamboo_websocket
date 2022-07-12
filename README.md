@@ -53,6 +53,11 @@ proc callBack(request: Request) {.async, gcsafe.} =
   var ws: WebSocket
 
   if request.url.path == "/":
+    let headers = {"Content-type": "text/html; charset=utf-8"}
+    let content = readFile("./echo_client.html")
+    await request.respond(Http200, content, headers.newHttpHeaders())
+
+  if request.url.path == "/chat":
     try:
       ws = await openWebSocket(request, setting)
     except:
@@ -125,6 +130,7 @@ import asyncdispatch,
        uri
 
 from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
+from bamboo_websocket/bamboo_works import BambooWorks
 from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()
@@ -132,15 +138,23 @@ var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
 
-  proc subProtcolsProc(ws: WebSocket, sub_protocol: seq[string]): bool {.gcsafe.} = 
-    ws.optional_data["name"] = $(sub_protocol[1])
+  proc subProtocolProcess(ws: WebSocket, works: BambooWorks): bool {.gcsafe.} =
+    try:
+      ws.optional_data["name"] = $(works.sub_protocol[1])
+    except IndexDefect:
+      return false
     return true
 
   var ws = WebSocket()
 
+  if request.url.path == "/":
+    let headers = {"Content-type": "text/html; charset=utf-8"}
+    let content = readFile("./chat_client.html")
+    await request.respond(Http200, content, headers.newHttpHeaders())
+
   if request.url.path == "/chat":
     try:
-      ws = await openWebSocket(request, setting, subProtcolsProc=subProtcolsProc)
+      ws = await openWebSocket(request, setting, subProtocolProcess=subProtocolProcess)
       WebSockets.add(ws)
       echo("ID: ", ws.id, ", Tag: ", ws.optional_data["name"], " has Opened.")
     except:
