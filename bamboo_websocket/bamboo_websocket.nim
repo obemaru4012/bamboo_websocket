@@ -16,16 +16,13 @@ import asyncdispatch,
 
 from errors import 
   UnknownOpCodeReceiveError,
-  WebSocketHandShakePreProcessError,
   WebSocketHandShakeSubProtcolsProcedureError,
-  WebSocketHandShakePostProcessProcedureError,
   WebSocketDataReceivedPostProcessError,
   WebSocketHandShakeHeaderError,
   WebSocketOtherError
 
 from frame import Frame
 from websocket import WebSocket, ConnectionStatus, OpCode
-from bamboo_works import BambooWorks, initBambooWorks
 from ./private/utilities import 
   convertBinaryStrings, 
   decodeHexStrings, 
@@ -68,7 +65,7 @@ proc getSecWebSocketAccept(sec_webSocket_key: string, magic_strings="258EAFA5-E9
   sec_websocket_accept = base64.encode(decodeHexStrings(sec_websocket_accept))
   return $(sec_webSocket_accept)
 
-proc getHeaderValues(header: HttpHeaders, key: string): seq[string] =
+proc getHeaderValues(header: HttpHeaders, key: string, lower: bool=true): seq[string] =
   ##[
   NimのHttpHeaderはKeyにかぶりがあると先頭の値をデフォルトで取得するため、被りがあっても全件取得を行う
   ]##
@@ -77,7 +74,11 @@ proc getHeaderValues(header: HttpHeaders, key: string): seq[string] =
   while true:
     try:
       var value: string = header[key, start]
-      headers.add(value.toLower())
+      if lower:
+        headers.add(value.toLower())
+      else:
+        # そのまま値を取ってくる
+        headers.add(value)
       start += 1
     except IndexDefect:
       # 取得できなくなるまで
@@ -100,9 +101,7 @@ proc loadServerSetting*(path="./setting.json"): TableRef[string, string] =
 
 proc openWebSocket*(request: Request,
                     setting: TableRef[string, string], 
-                    preProcess: proc(ws: WebSocket, works: BambooWorks): bool = proc(ws: WebSocket, works: BambooWorks): bool = true,
-                    subProtocolProcess: proc(ws: WebSocket, works: BambooWorks): bool = proc(ws: WebSocket, works: BambooWorks): bool = true,
-                    postProcess: proc(ws: WebSocket, works: BambooWorks): bool = proc(ws: WebSocket, works: BambooWorks): bool = true
+                    subProtocolProcess: proc(ws: WebSocket, request: Request): bool = proc(ws: WebSocket, request: Request): bool = true,
                     ): Future[WebSocket] {.async.} =
   ##[
 
@@ -125,22 +124,11 @@ proc openWebSocket*(request: Request,
   # ハンドシェイクリクエスト解析
   var headers: HttpHeaders = request.headers
 
-  # 内部の各処理で利用するためのObject
-  # Nimにはメンバ変数が存在しないためtemplate methodのような使い方は不可
-  # → いい方法ないかなあ...
-  var works: BambooWorks = initBambooWorks()
-  works.headers = headers
-  works.setting = setting
-
-  # 高階関数 → 前処理
-  if not ws.preProcess(works):
-    raise newException(WebSocketHandShakePreProcessError, "WebSocketハンドシェイク時の前処理（preProcessProc）でエラーが発生しています。")
-
   # Sec-WebSocket-Version: 現行の「13」ではない場合×
-  if not headers.hasKey("sec-websocket-version"): 
+  if not request.headers.hasKey("sec-websocket-version"): 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「sec-websocket-version」が見つかりません。")
 
-  var sec_websocket_version = getHeaderValues(headers, "sec-websocket-version")
+  var sec_websocket_version = getHeaderValues(request.headers, "sec-websocket-version")
   if not all(sec_websocket_version, proc (x: string): bool = x == setting["websocket_version"]): 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「sec-websocket-version」の値が$#ではありません。（$#）" % [setting["websocket_version"], headers["sec-websocket-version"]])
 
@@ -148,10 +136,10 @@ proc openWebSocket*(request: Request,
   ws.version = version
 
   # Upgrade: 「websocket」が含まれない場合×
-  if not headers.hasKey("Upgrade") : 
+  if not request.headers.hasKey("Upgrade") : 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「Upgrade」が見つかりません。")
 
-  var upgrades = getHeaderValues(headers, "Upgrade")
+  var upgrades = getHeaderValues(request.headers, "Upgrade")
   var upgrade_checker = proc (x: string): bool = x == setting["upgrade"]
   if not any(upgrades, upgrade_checker): 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「Upgrade」の値が$#ではありません。（$#）" % [setting["upgrade"], headers["Upgrade"]])
@@ -160,10 +148,10 @@ proc openWebSocket*(request: Request,
   ws.upgrade = upgrade
 
   # Connection: 「upgrade」が含まれない場合×
-  if not headers.hasKey("Connection") : 
+  if not request.headers.hasKey("Connection") : 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「Connection」が見つかりません。")
 
-  var connections = getHeaderValues(headers, "Connection")
+  var connections = getHeaderValues(request.headers, "Connection")
   var connections_checker = proc (x: string): bool = x == setting["connection"]
   if not any(connections, connections_checker): 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「Connection」の値が$#ではありません。（$#）" % [setting["connection"], headers["Connection"]])
@@ -172,10 +160,10 @@ proc openWebSocket*(request: Request,
   ws.connection = connection
 
   # Sec-WebSocket-Key: 存在しない場合×
-  if not headers.hasKey("Sec-WebSocket-Key"): 
+  if not request.headers.hasKey("Sec-WebSocket-Key"): 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「Sec-WebSocket-Key」が見つかりません。")
   
-  var sec_websocket_accept: string = getSecWebSocketAccept($headers["Sec-WebSocket-Key"].strip(), setting["magic_strings"])
+  var sec_websocket_accept: string = getSecWebSocketAccept($request.headers["Sec-WebSocket-Key"].strip(), setting["magic_strings"])
   ws.sec_websocket_accept = sec_websocket_accept
 
   # レスポンス用ソケット取得
@@ -188,15 +176,14 @@ proc openWebSocket*(request: Request,
 
   # Sec-WebSocket-Protocol: が存在する場合（なくてもよい）
   # ここに送付される値によってサーバの種類をハンドルする。
-  if headers.hasKey("Sec-WebSocket-Protocol"): 
-    var sub_protocol = getHeaderValues(headers, "Sec-WebSocket-Protocol")
+  if request.headers.hasKey("Sec-WebSocket-Protocol"): 
+    var sub_protocol = getHeaderValues(request.headers, "Sec-WebSocket-Protocol", lower=false)
     response.add("Sec-Websocket-Protocol: " & sub_protocol[sub_protocol.low()] & "\n")
 
     ws.sec_websocket_protocol = sub_protocol
-    works.sub_protocol = sub_protocol
 
     # Sec-WebSocket-Protocolの値に基づいて独自の処理を行う
-    if not ws.subProtocolProcess(works):
+    if not ws.subProtocolProcess(request):
       raise newException(WebSocketHandShakeSubProtcolsProcedureError, "WebSocketハンドシェイク時の独自処理（subProtcolsProc）でエラーが発生しています。")
 
   # お尻に改行コード追加
@@ -207,10 +194,6 @@ proc openWebSocket*(request: Request,
     await ws.socket.send(response)
   except:
     raise newException(WebSocketOtherError, "WebSocketハンドシェイクレスポンスの送信でエラーが発生しています。")
-
-  # 高階関数 → 追加処理
-  if not ws.postProcess(works):
-    raise newException(WebSocketHandShakePostProcessProcedureError, "WebSocketハンドシェイク時の後処理（postProcessProc）でエラーが発生しています。")
 
   ws.id = $(genOid())
   ws.status = ConnectionStatus.OPEN # ここでOPENに設定しておき、「newAsyncHttpServer」で回す

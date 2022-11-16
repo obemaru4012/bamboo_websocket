@@ -161,14 +161,17 @@
         var tag = document.getElementById("tag").value;
         document.getElementById("selected_tag").value = tag;
 
+        var payload = btoa(JSON.stringify({'tag': tag}));
+
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", ["chat", tag]);
+          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
           document.getElementById("connect").style.pointerEvents = 'none';
           document.getElementById("close").style.pointerEvents = 'auto';
         } catch (error) {
+          console.log(error);
           $("#connect_filed_modal").modal('show');
         }
 
@@ -234,7 +237,8 @@
       {
         var tag = document.getElementById("selected_tag").value;
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", ["chat", tag]);
+          var payload = btoa(JSON.stringify({'tag': tag}));
+          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close

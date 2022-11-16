@@ -1,6 +1,7 @@
 import asyncdispatch, 
        asynchttpserver, 
        asyncnet, 
+       base64,
        httpcore, 
        json,
        nativesockets, 
@@ -9,18 +10,29 @@ import asyncdispatch,
        tables,
        uri
 
-from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
-from bamboo_websocket/bamboo_works import BambooWorks
-from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
+from ../../bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
+from ../../bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()
 var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
 
-  proc subProtocolProcess(ws: WebSocket, works: BambooWorks): bool {.gcsafe.} =
+  proc subProtocolProcess(ws: WebSocket, request: Request): bool {.gcsafe.} =
     try:
-      ws.optional_data["name"] = $(works.sub_protocol[1])
+      var table: Table[string, string]
+      var sub_protocol = request.headers["sec-websocket-protocol", 0]
+
+      # Client側は「https://developer.mozilla.org/ja/docs/Web/API/btoa」でベー6エンコード実施。
+      var protocols = json.parseJson(base64.decode(sub_protocol)) # JsonNode
+
+      # sub protocolをTable[string, string]に変換
+      for key in protocols.keys():
+        var tmp = $(protocols[key])
+        table[key] = tmp.strip(chars={'"', ' '})
+
+      ws.optional_data["name"] = $(table["tag"])
+  
     except IndexDefect:
       return false
     return true
@@ -38,6 +50,10 @@ proc callBack(request: Request) {.async, gcsafe.} =
       WebSockets.add(ws)
       echo("ID: ", ws.id, ", Tag: ", ws.optional_data["name"], " has Opened.")
     except:
+      var e = getCurrentException()
+      var msg = getCurrentExceptionMsg()
+      echo msg
+
       ws.status = ConnectionStatus.INITIAl
 
     while ws.status == ConnectionStatus.OPEN:
