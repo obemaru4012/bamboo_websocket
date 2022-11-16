@@ -1,8 +1,7 @@
-
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebSocket echo chat</title>
+    <title>WebSocket Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
@@ -11,7 +10,7 @@
 
     <div class="container pl-0 pr-0">
       <nav class="navbar navbar-dark bg-dark mb-2">
-        <a href="#" class="navbar-brand">Bamboo Sample Echo Chat🐼</a>
+        <a href="#" class="navbar-brand">Bamboo Sample Room Chat🐼</a>
         <button class="navbar-toggler" type="button"
             data-toggle="collapse"
             data-target="#navmenu1"
@@ -29,20 +28,18 @@
       </nav>
     </div>
 
-    <div class="container overflow-scroll">
-      <p class="lead">Bamboo WebSocket Sample Echo Chat🐼へようこそ</p>
+    <div class="container">
+      <p class="lead">Bamboo WebSocket Sample Chat🐼へようこそ</p>
 
       <div id="message_container" class="container" style="padding-bottom: 70px;">
         <div id="comments" class="container"></div>
       </div>
-
-    </div>
-
-    <div class="container fixed-bottom bg-dark">
-      <div id="form" class="row p-3">
-        <input id="m" class="col-9" type="text" class="form-control" autocomplete="off" placeholder="Shift + Enter => Send"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
+      
+      <div class="container fixed-bottom bg-dark">
+        <div id="form" class="row p-3">
+          <input id="m" class="col-9" type="text" class="form-control" autocomplete="off" placeholder="Shift + Enter => Send"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
+        </div>
       </div>
-    </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
@@ -107,18 +104,83 @@
       </div>
     </div>
 
-    <script>
+    <div class="modal fade" data-backdrop="false" id="tag_select_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="label1">入室したい部屋の選択と名前を入力してください。</h5>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <!-- 部屋タグ -->
+              <select id="room_tag" class="form-control">
+                <option value="0">Please choose a chat room</option>
+                <option value="1">Room: 🐼</option>
+                <option value="2">Room: 👻</option>
+                <option value="3">Room: 🐱</option>
+                <option value="4">Room: 🐷</option>
+              </select>
+            </div>
 
+            <div class="form-group">
+              <input type="text" id="name_tag" class="form-control" placeholder="Name" maxlength="16">
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-info" data-dismiss="modal">Enter</button>
+          </div>
+          <input id="selected_tag" type="hidden" value="1">
+          <input id="input_name_tag" type="hidden" value="No Name">
+        </div>
+      </div>
+    </div>
+
+    <script>
       document.getElementById("close").style.pointerEvents = 'none';
 
+      const room_tags = {
+        "1": "🐼",
+        "2": "👻",
+        "3": "🐱",
+        "4": "🐷",
+      };
+      
+      var socket = null;
+
+      // タグ選択モーダル表示
+      $("#tag_select_modal").modal('show');
+      
+      // タグ選択モーダルが閉じるときにコールバック処理
+      $("#tag_select_modal").on('hidden.bs.modal', function (e) {
+        // 接続処理
+        var room_tag = document.getElementById("room_tag").value;
+        var name_tag = document.getElementById("name_tag").value;
+        document.getElementById("selected_tag").value = room_tag;
+        document.getElementById("input_name_tag").value = name_tag;
+
+        var payload = btoa(unescape(encodeURIComponent(JSON.stringify({'room_tag': room_tag, "name_tag": name_tag}))));
+
+        try {
+          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
+          socket.onopen = on_open
+          socket.onmessage = on_message
+          socket.onclose = on_close
+          document.getElementById("connect").style.pointerEvents = 'none';
+          document.getElementById("close").style.pointerEvents = 'auto';
+        } catch (error) {
+          console.log(error);
+          $("#connect_filed_modal").modal('show');
+        }
+
+      })
+
       const on_open = (event) => {
-        document.getElementById("connect").style.pointerEvents = 'none';
-        document.getElementById("close").style.pointerEvents = 'auto';
         $("#launch_modal").modal('show');
       }
 
       const on_message = (event) => {
-        var elem = echo_message_box(event)
+        var elem = other_message_box(event)
         var comments = document.getElementById("comments");
         comments.appendChild(elem);
         // 最下部に移動
@@ -133,27 +195,6 @@
         $("#disconnect_modal").modal('show');
       }
 
-      var socket = null;
-      socket = new WebSocket("ws://localhost:9001/chat", ["chat"]);
-
-      /**
-      * ソケット通信の接続が成功したとき
-      * @type {event} event
-      */
-      socket.onopen = on_open
-
-      /**
-      * サーバーからのメッセージを受信したとき
-      * @type {event} event
-      */
-      socket.onmessage = on_message
-
-      /**
-      * サーバーとの接続が切れたとき
-      * @type {event} event
-      */
-      socket.onclose = on_close
-
       /**
       * サーバーにメッセージを送信する
       * @type {event} event
@@ -161,22 +202,19 @@
       const send_message = () => 
       {
         const message = document.getElementById("m");
-        var date = new Date();
-
-        var message_json = {
-          id:   null,
-          type: "text",
-          message: message.value,
-          date: date.toLocaleString("ja")
-        };
-
+        const name_tag = document.getElementById("input_name_tag").value;
         if(message.value.trim() != "") 
         { 
-          socket.send(JSON.stringify(message_json));
-          var elem = self_message_box(message);
+          socket.send(message.value);
+          var elem = self_message_box(message, name_tag);
           var comments = document.getElementById("comments");
           comments.appendChild(elem);
           message.value = "";
+          // 最下部に移動
+          window.scroll(0, document.documentElement.clientHeight);
+
+          // フォーカス合わせ
+          document.getElementById("m").focus()
         }
         return false;
       }
@@ -193,13 +231,19 @@
       /**
       * ソケット通信を開始する
       */
-      const connect_socket = (sub_protocol=["chat"]) =>
+      const connect_socket = () =>
       {
+        var room_tag = document.getElementById("room_tag").value;
+        var name_tag = document.getElementById("name_tag").value;
+
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", sub_protocol);
+          var payload = btoa(unescape(encodeURIComponent(JSON.stringify({'room_tag': room_tag, "name_tag": name_tag}))));
+          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
+          document.getElementById("connect").style.pointerEvents = 'none';
+          document.getElementById("close").style.pointerEvents = 'auto';
         } catch (error) {
           $("#connect_filed_modal").modal('show');
         }
@@ -209,30 +253,25 @@
       * 自身がメッセージを送信した際に画面上に表示する
       * メッセージボックスを表示させる
       */
-      const self_message_box = (message) =>
+      const self_message_box = (message, name) =>
       {
         var elem = document.createElement('div');
         elem.classList.add('row');
         elem.classList.add('mb-2');
 
         var elem_left = document.createElement('div');
-        elem_left.classList.add('col-12');
+        elem_left.classList.add('col-6');
 
         var elem_right = document.createElement('div');
-        elem_right.classList.add('col-12');
+        elem_right.classList.add('col-6');
         elem_right.classList.add('bg-white');
         elem_right.classList.add('shadow-sm');
+        elem_right.classList.add('col-6');
         elem_right.classList.add('border');
         elem_right.classList.add('border-info');
         elem_right.classList.add('rounded');
         elem_right.classList.add('p-3');
-
-        var date = new Date();
-        var datestr = ('0' + date.getHours()).slice(-2)
-                + ':' + ('0' + date.getMinutes()).slice(-2)
-                + ':' + ('0' + date.getSeconds()).slice(-2);
-
-        elem_right.innerText = "Send Message: " + message.value;
+        elem_right.textContent = `${name}さん: ${message.value}`;
 
         elem.appendChild(elem_left);
         elem.appendChild(elem_right);
@@ -243,28 +282,64 @@
       * 自身がメッセージを送信した際に画面上に表示する
       * メッセージボックスを表示させる
       */
-      const echo_message_box = (event) =>
+      const other_message_box = (event) =>
       {
         var elem = document.createElement('div');
         elem.classList.add('row');
         elem.classList.add('mb-2');
 
-        var elem_left = document.createElement('div');
-        elem_left.classList.add('col-12');
-        elem_left.classList.add('bg-white');
-        elem_left.classList.add('shadow-sm');
-        elem_left.classList.add('border');
-        elem_left.classList.add('border-success');
-        elem_left.classList.add('rounded');
-        elem_left.classList.add('p-3');
+        // メッセージのパース
+        var data = JSON.parse(event.data);
 
-        var json = JSON.parse(event.data)
+        if("closing" in data[0])
+        {
+          var elem_left = document.createElement('div');
+          elem_left.classList.add('col-6');
+          elem_left.classList.add('bg-white');
+          elem_left.classList.add('shadow-sm');
+          elem_left.classList.add('col-6');
+          elem_left.classList.add('border');
+          elem_left.classList.add('border-danger');
+          elem_left.classList.add('rounded');
+          elem_left.classList.add('p-3');
+          
+          var name = data[0].name;
+          elem_left.textContent = `${name}さんが退室しました。`;
+        }
+        else if("enter" in data[0])
+        {
+          var elem_left = document.createElement('div');
+          elem_left.classList.add('col-6');
+          elem_left.classList.add('bg-white');
+          elem_left.classList.add('shadow-sm');
+          elem_left.classList.add('col-6');
+          elem_left.classList.add('border');
+          elem_left.classList.add('border-success');
+          elem_left.classList.add('rounded');
+          elem_left.classList.add('p-3');
+          
+          var name = data[0].name;
+          elem_left.textContent = `${name}さんが入室しました。`;
+        }
+        else
+        {
+          var elem_left = document.createElement('div');
+          elem_left.classList.add('col-6');
+          elem_left.classList.add('bg-white');
+          elem_left.classList.add('shadow-sm');
+          elem_left.classList.add('col-6');
+          elem_left.classList.add('border');
+          elem_left.classList.add('border-info');
+          elem_left.classList.add('rounded');
+          elem_left.classList.add('p-3');
 
-        elem_left.innerText = "Echo Message: " + json["message"]  + "\n" +
-                              "Echo Datetime: " + json["date"];
-        
+          var name = data[0].name;
+          var message = data[0].message;
+          elem_left.textContent = `${name}: ${message}`;
+        }
+
         var elem_right = document.createElement('div');
-        elem_right.classList.add('col-12');
+        elem_right.classList.add('col-6');
 
         elem.appendChild(elem_left);
         elem.appendChild(elem_right);

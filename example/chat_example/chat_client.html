@@ -21,8 +21,8 @@
         </button>
         <div class="collapse navbar-collapse" id="navmenu1">
           <div class="navbar-nav">
-            <a class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
-            <a class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
+            <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
+            <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
           </div>
         </div>
       </nav>
@@ -135,6 +135,7 @@
     </div>
 
     <script>
+      document.getElementById("close").style.pointerEvents = 'none';
 
       const tags = {
         "1": "🐼",
@@ -159,10 +160,21 @@
         // 接続処理
         var tag = document.getElementById("tag").value;
         document.getElementById("selected_tag").value = tag;
-        socket = new WebSocket("ws://localhost:9001/chat", ["chat", tag]);
-        socket.onopen = on_open
-        socket.onmessage = on_message
-        socket.onclose = on_close
+
+        var payload = btoa(JSON.stringify({'tag': tag}));
+
+        try {
+          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
+          socket.onopen = on_open
+          socket.onmessage = on_message
+          socket.onclose = on_close
+          document.getElementById("connect").style.pointerEvents = 'none';
+          document.getElementById("close").style.pointerEvents = 'auto';
+        } catch (error) {
+          console.log(error);
+          $("#connect_filed_modal").modal('show');
+        }
+
       })
 
       const on_open = (event) => {
@@ -180,6 +192,8 @@
       }
 
       const on_close = (event) => {
+        document.getElementById("connect").style.pointerEvents = 'auto';
+        document.getElementById("close").style.pointerEvents = 'none';
         $("#disconnect_modal").modal('show');
       }
 
@@ -223,10 +237,13 @@
       {
         var tag = document.getElementById("selected_tag").value;
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", ["chat", tag]);
+          var payload = btoa(JSON.stringify({'tag': tag}));
+          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
+          document.getElementById("connect").style.pointerEvents = 'none';
+          document.getElementById("close").style.pointerEvents = 'auto';
         } catch (error) {
           $("#connect_filed_modal").modal('show');
         }
