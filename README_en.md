@@ -6,7 +6,7 @@
 - We aim for a refreshing implementation, like splitting bamboo.
 - The goal of this project is to make it easy to create chat and gaming servers.
 - A detailed description of Bamboo and how to use it will be included in the wiki.
-- The latest version is **0.3.1**.
+- The latest version is **0.3.2**.
 - [README in Japanese.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README.md)
 
 #### 🖥Dependency
@@ -16,7 +16,7 @@
 #### 👩‍💻Setup
 
 ```bash
-$ nimble install bamboowebsocket@0.3.1
+$ nimble install bamboowebsocket@0.3.2
 ```
 
 #### 🤔Description
@@ -131,8 +131,8 @@ import asyncdispatch,
        tables,
        uri
 
-from ../../bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
-from ../../bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
+from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
+from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()
 var WebSockets: seq[WebSocket] = newSeq[WebSocket]()

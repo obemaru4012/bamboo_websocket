@@ -6,7 +6,7 @@
 - 竹を割ったようにさっぱりとした実装を目指しています。
 - チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
 - Bamboo の詳細な説明と利用方法については wiki に記載予定です。
-- 最新バージョンは**0.3.1**になります。
+- 最新バージョンは**0.3.2**になります。
 - [README in English.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README_en.md)
 
 #### 🖥Dependency
@@ -16,7 +16,7 @@
 #### 👩‍💻Setup
 
 ```bash
-$ nimble install bamboowebsocket@0.3.1
+$ nimble install bamboowebsocket@0.3.2
 ```
 
 #### 🤔Description
@@ -134,8 +134,8 @@ import asyncdispatch,
        tables,
        uri
 
-from ../../bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
-from ../../bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
+from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
+from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()
 var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
