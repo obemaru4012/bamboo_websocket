@@ -29,7 +29,9 @@ proc callBack(request: Request) {.async, gcsafe.} =
     try:
       ws = await openWebSocket(request, setting)
     except:
-      discard
+      let error = getCurrentException()
+      let message = getCurrentException()
+      echo(message.msg)
 
     while ws.status == ConnectionStatus.OPEN:
       try:

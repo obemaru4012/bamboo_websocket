@@ -8,6 +8,7 @@ import unittest
 import asyncdispatch, 
        asynchttpserver, 
        httpcore, 
+       json,
        nativesockets, 
        net, 
        strutils, 
@@ -22,7 +23,7 @@ from bamboo_websocket import
   sendMessage
 
 # ダミー設定テーブル作成
-var setting = {
+var setting = %* {
                "websocket_version": "13", 
                "upgrade": "websocket", 
                "connection": "upgrade", 

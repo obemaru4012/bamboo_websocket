@@ -8,6 +8,7 @@ include ./private/utilities
 
 import unittest
 import base64,
+       json,
        nativesockets, 
        net, 
        std/sha1, 
@@ -15,7 +16,7 @@ import base64,
        tables
 
 # ダミー設定テーブル作成
-var setting = {
+var setting = %* {
                "websocket_version": "13", 
                "upgrade": "websocket", 
                "connection": "upgrade", 
@@ -58,4 +59,4 @@ suite "utilities test":
     check generateMaskKey(1) == @['j', '`', '}', '\x84']
 
   test "generateMaskKey(514902776)":
-    check generateMaskKey(setting["mask_key_seeder"].parseInt()) == @['\x82', '\x00', ']', '\x8D']
+    check generateMaskKey(setting["mask_key_seeder"].getInt()) == @['\x82', '\x00', ']', '\x8D']

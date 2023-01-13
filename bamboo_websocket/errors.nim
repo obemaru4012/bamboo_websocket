@@ -8,3 +8,4 @@ type
   WebSocketDataReceivedPostProcessError* = object of CatchableError
   UnknownOpcodeReceiveError* = object of ValueError
   WebSocketOtherError* = object of IOError
+  ServerSettingNotEnoughError* = object of KeyError
