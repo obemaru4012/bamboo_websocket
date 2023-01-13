@@ -16,12 +16,13 @@ import asyncdispatch,
        tables
 
 from errors import 
+  NoMaskedFrameReceiveError,
+  ServerSettingNotEnoughError,
   UnknownOpCodeReceiveError,
   WebSocketHandShakeSubProtcolsProcedureError,
   WebSocketDataReceivedPostProcessError,
   WebSocketHandShakeHeaderError,
   WebSocketOtherError,
-  ServerSettingNotEnoughError
 
 from frame import Frame
 from websocket import WebSocket, ConnectionStatus, OpCode
