@@ -8,7 +8,8 @@ import asyncdispatch,
        nativesockets, 
        net, 
        oids, 
-       sequtils, 
+       sequtils,
+       std/sets,
        std/sha1, 
        strutils, 
        streams,
@@ -94,15 +95,16 @@ proc loadServerSetting*(path="./setting.json"): JsonNode =
   let settings = parseFile(path)
   return settings
 
-proc checkServerSettingKeys*(settings: JsonNode): bool =
+proc checkServerSetting*(settings: JsonNode, required_keys: seq[string], ): bool =
   ##[
   設定ファイルに最低限必要な設定が存在するかをチェック
+  すなわち「required_keys」が実際のsettingsのsubsetである。
   ]##
+  var keys: seq[string]
   for key in settings.keys():
-    echo(key)
-    echo(settings[key])
-  
-  return true
+    keys.add(key)
+
+  return required_keys.toHashSet() <= keys.toHashSet()
 
 proc openWebSocket*(request: Request,
                     setting: JsonNode, 
@@ -123,8 +125,10 @@ proc openWebSocket*(request: Request,
     optional_data: initTable[string, string]()
   )
 
-  # [TODO] server setting fileのチェック
-  # var r = checkServerSettingKeys(setting)
+  # server setting fileのチェック
+  var r: bool = checkServerSetting(setting, ["websocket_version", "upgrade", "connection", "websocket_key", "magic_strings", "mask_key_seeder"].toSeq())
+  if r == false:
+    raise newException(ServerSettingNotEnoughError, "設定ファイルの設定が不足しています。設定ファイルを見直してください。")
 
   # ハンドシェイク開始
   ws.status = ConnectionStatus.CONNECTING
@@ -144,8 +148,6 @@ proc openWebSocket*(request: Request,
   let version = sec_websocket_version[sec_websocket_version.low()]
   ws.version = version
 
-  # echo("ここきた")
-
   # Upgrade: 「websocket」が含まれない場合×
   if not request.headers.hasKey("Upgrade") : 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「Upgrade」が見つかりません。")
@@ -157,8 +159,6 @@ proc openWebSocket*(request: Request,
 
   let upgrade = setting["upgrade"].getStr()
   ws.upgrade = upgrade
-
-  # echo("ここきた")
 
   # Connection: 「upgrade」が含まれない場合×
   if not request.headers.hasKey("Connection") : 
@@ -425,7 +425,6 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async.} =
   else:
     frame.DATA.add(data)
 
-  # echo(frame)
   return frame
 
 proc postMessageReceivedProc*(ws: WebSocket, receive_result: tuple[opcode: OpCode, message: string]): bool {.gcsafe.} =
