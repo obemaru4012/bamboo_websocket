@@ -22,7 +22,7 @@ from errors import
   WebSocketHandShakeSubProtcolsProcedureError,
   WebSocketDataReceivedPostProcessError,
   WebSocketHandShakeHeaderError,
-  WebSocketOtherError,
+  WebSocketOtherError
 
 from frame import Frame
 from websocket import WebSocket, ConnectionStatus, OpCode
@@ -32,7 +32,7 @@ from ./private/utilities import
   convertRuneSequence,
   generateMaskKey
 
-proc handshake*(host: string, client_port: int, server_port: int, setting: TableRef[string, string]): Future[WebSocket] {.async.} =
+proc handshake*(host: string, client_port: int, server_port: int, setting: JsonNode): Future[WebSocket] {.async.} =
   ##[
   
   ]##
@@ -41,9 +41,9 @@ proc handshake*(host: string, client_port: int, server_port: int, setting: Table
   client.headers = newHttpHeaders({
                                    "Host": "$#:$#" % [host, $(client_port)],
                                    "Origin": "http://$#:$#" % [host, $(client_port)],
-                                   "Upgrade": "$#" % [setting["upgrade"]], 
-                                   "Connection": "$#" % [setting["connection"]], 
-                                   "Sec-WebSocket-Key": "$#" % [setting["websocket_key"]],
+                                   "Upgrade": "$#" % [setting["upgrade"].getStr()], 
+                                   "Connection": "$#" % [setting["connection"].getStr()], 
+                                   "Sec-WebSocket-Key": "$#" % [setting["websocket_key"].getStr()],
                                    "Sec-WebSocket-Version": "13"
                                   })
 
@@ -94,12 +94,13 @@ proc loadServerSetting*(path="./setting.json"): JsonNode =
   設定ファイルを読み込む
   ]##
   let settings = parseFile(path)
+  echo(settings)
   return settings
 
 proc checkServerSetting*(settings: JsonNode, required_keys: seq[string], ): bool =
   ##[
   設定ファイルに最低限必要な設定が存在するかをチェック
-  すなわち「required_keys」が実際のsettingsのsubsetである。
+  すなわち「required_keys」が実際の「settings」のsubsetである。
   ]##
   var keys: seq[string]
   for key in settings.keys():
