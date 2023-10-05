@@ -10,29 +10,22 @@ import asyncdispatch,
        tables,
        uri
 
-from ../../bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
-from ../../bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
+from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
+from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
 var setting = loadServerSetting()
+
 var WebSockets: Table[string, seq[WebSocket]] = initTable[string, seq[WebSocket]]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
 
   proc subProtocolProcess(ws: WebSocket, request: Request): bool {.gcsafe.} =
     try:
-      var table: Table[string, string]
-      var sub_protocol = request.headers["sec-websocket-protocol", 0]
+      var name = request.headers["sec-websocket-protocol", 0]
+      var room = request.headers["sec-websocket-protocol", 1]
 
-      # Client側は「https://developer.mozilla.org/ja/docs/Web/API/btoa」でベー6エンコード実施。
-      var protocols = json.parseJson(base64.decode(sub_protocol)) # JsonNode
-
-      # sub protocolをTable[string, string]に変換
-      for key in protocols.keys():
-        var tmp = $(protocols[key])
-        table[key] = tmp.strip(chars={'"', ' '})
-
-      ws.optional_data["name"] = $(table["name_tag"])
-      ws.optional_data["room"] = $(table["room_tag"])
+      ws.optional_data["name"] = $(room)
+      ws.optional_data["room"] = $(name)
   
     except IndexDefect:
       return false

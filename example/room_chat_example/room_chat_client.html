@@ -1,49 +1,56 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>WebSocket Chat</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
-  </head>
-  <body id="body" class="bg-light">
 
-    <div class="container pl-0 pr-0">
-      <nav class="navbar navbar-dark bg-dark mb-2">
-        <a href="#" class="navbar-brand">Bamboo Sample Room Chat🐼</a>
-        <button class="navbar-toggler" type="button"
-            data-toggle="collapse"
-            data-target="#navmenu1"
-            aria-controls="navmenu1"
-            aria-expanded="false"
-            aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navmenu1">
-          <div class="navbar-nav">
-            <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
-            <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
-          </div>
+<head>
+  <title>WebSocket Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+</head>
+
+<body id="body" class="bg-light">
+
+  <div class="container pl-0 pr-0">
+    <nav class="navbar navbar-dark bg-dark mb-2">
+      <a href="#" class="navbar-brand">Bamboo Sample Room Chat🐼</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navmenu1"
+        aria-controls="navmenu1" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu1">
+        <div class="navbar-nav">
+          <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
+          <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
         </div>
-      </nav>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container">
+    <p class="lead">Bamboo WebSocket Sample Chat🐼へようこそ</p>
+
+    <div id="message_container" class="container" style="padding-bottom: 70px;">
+      <div id="comments" class="container"></div>
     </div>
 
-    <div class="container">
-      <p class="lead">Bamboo WebSocket Sample Chat🐼へようこそ</p>
-
-      <div id="message_container" class="container" style="padding-bottom: 70px;">
-        <div id="comments" class="container"></div>
+    <div class="container fixed-bottom bg-dark">
+      <div id="form" class="row p-3">
+        <input id="m" class="col-9" type="text" class="form-control" autocomplete="off"
+          placeholder="Shift + Enter => Send" /><button type="button" class="btn btn-outline-info col-3"
+          onclick="send_message()">送信</button>
       </div>
-      
-      <div class="container fixed-bottom bg-dark">
-        <div id="form" class="row p-3">
-          <input id="m" class="col-9" type="text" class="form-control" autocomplete="off" placeholder="Shift + Enter => Send"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
-        </div>
-      </div>
+    </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+      integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+      crossorigin="anonymous"></script>
 
     <div class="modal fade" id="launch_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
       <div class="modal-dialog" role="document">
@@ -64,7 +71,8 @@
       </div>
     </div>
 
-    <div class="modal fade" id="connect_filed_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal fade" id="connect_filed_modal" tabindex="-1" role="dialog" aria-labelledby="label1"
+      aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -84,7 +92,8 @@
       </div>
     </div>
 
-    <div class="modal fade" id="disconnect_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal fade" id="disconnect_modal" tabindex="-1" role="dialog" aria-labelledby="label1"
+      aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -104,7 +113,8 @@
       </div>
     </div>
 
-    <div class="modal fade" data-backdrop="false" id="tag_select_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal fade" data-backdrop="false" id="tag_select_modal" tabindex="-1" role="dialog"
+      aria-labelledby="label1" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -145,12 +155,12 @@
         "3": "🐱",
         "4": "🐷",
       };
-      
+
       var socket = null;
 
       // タグ選択モーダル表示
       $("#tag_select_modal").modal('show');
-      
+
       // タグ選択モーダルが閉じるときにコールバック処理
       $("#tag_select_modal").on('hidden.bs.modal', function (e) {
         // 接続処理
@@ -159,10 +169,8 @@
         document.getElementById("selected_tag").value = room_tag;
         document.getElementById("input_name_tag").value = name_tag;
 
-        var payload = btoa(unescape(encodeURIComponent(JSON.stringify({'room_tag': room_tag, "name_tag": name_tag}))));
-
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
+          socket = new WebSocket("ws://localhost:9001/chat", [room_tag, name_tag]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
@@ -199,12 +207,10 @@
       * サーバーにメッセージを送信する
       * @type {event} event
       */
-      const send_message = () => 
-      {
+      const send_message = () => {
         const message = document.getElementById("m");
         const name_tag = document.getElementById("input_name_tag").value;
-        if(message.value.trim() != "") 
-        { 
+        if (message.value.trim() != "") {
           socket.send(message.value);
           var elem = self_message_box(message, name_tag);
           var comments = document.getElementById("comments");
@@ -218,27 +224,24 @@
         }
         return false;
       }
-      
+
       /**
       * ソケット通信を閉じる
       */
-      const close_socket = () =>
-      {
-        while(socket.bufferedAmount != 0){/** Sending rest data... */}
-        if(socket.readyState == 1){ socket.close(1000, ""); }
+      const close_socket = () => {
+        while (socket.bufferedAmount != 0) {/** Sending rest data... */ }
+        if (socket.readyState == 1) { socket.close(1000, ""); }
       }
 
       /**
       * ソケット通信を開始する
       */
-      const connect_socket = () =>
-      {
+      const connect_socket = () => {
         var room_tag = document.getElementById("room_tag").value;
         var name_tag = document.getElementById("name_tag").value;
 
         try {
-          var payload = btoa(unescape(encodeURIComponent(JSON.stringify({'room_tag': room_tag, "name_tag": name_tag}))));
-          socket = new WebSocket("ws://localhost:9001/chat", [payload]);
+          socket = new WebSocket("ws://localhost:9001/chat", [room_tag, name_tag]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
@@ -253,8 +256,7 @@
       * 自身がメッセージを送信した際に画面上に表示する
       * メッセージボックスを表示させる
       */
-      const self_message_box = (message, name) =>
-      {
+      const self_message_box = (message, name) => {
         var elem = document.createElement('div');
         elem.classList.add('row');
         elem.classList.add('mb-2');
@@ -282,8 +284,7 @@
       * 自身がメッセージを送信した際に画面上に表示する
       * メッセージボックスを表示させる
       */
-      const other_message_box = (event) =>
-      {
+      const other_message_box = (event) => {
         var elem = document.createElement('div');
         elem.classList.add('row');
         elem.classList.add('mb-2');
@@ -291,8 +292,7 @@
         // メッセージのパース
         var data = JSON.parse(event.data);
 
-        if("closing" in data[0])
-        {
+        if ("closing" in data[0]) {
           var elem_left = document.createElement('div');
           elem_left.classList.add('col-6');
           elem_left.classList.add('bg-white');
@@ -302,12 +302,11 @@
           elem_left.classList.add('border-danger');
           elem_left.classList.add('rounded');
           elem_left.classList.add('p-3');
-          
+
           var name = data[0].name;
           elem_left.textContent = `${name}さんが退室しました。`;
         }
-        else if("enter" in data[0])
-        {
+        else if ("enter" in data[0]) {
           var elem_left = document.createElement('div');
           elem_left.classList.add('col-6');
           elem_left.classList.add('bg-white');
@@ -317,12 +316,11 @@
           elem_left.classList.add('border-success');
           elem_left.classList.add('rounded');
           elem_left.classList.add('p-3');
-          
+
           var name = data[0].name;
           elem_left.textContent = `${name}さんが入室しました。`;
         }
-        else
-        {
+        else {
           var elem_left = document.createElement('div');
           elem_left.classList.add('col-6');
           elem_left.classList.add('bg-white');
@@ -348,14 +346,14 @@
 
       const m = document.getElementById('m');
       m.addEventListener('keydown', function (e) {
-          const code = e.which || e.keyCode;
-          if(code === 13 && e.shiftKey) 
-          {
-            send_message();
-          }
+        const code = e.which || e.keyCode;
+        if (code === 13 && e.shiftKey) {
+          send_message();
+        }
       });
 
     </script>
 
-  </body>
+</body>
+
 </html>

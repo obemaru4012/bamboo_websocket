@@ -8,13 +8,16 @@ import asyncdispatch,
        nativesockets, 
        net, 
        oids, 
-       sequtils, 
+       sequtils,
+       std/sets,
        std/sha1, 
        strutils, 
        streams,
        tables
 
 from errors import 
+  NoMaskedFrameReceiveError,
+  ServerSettingNotEnoughError,
   UnknownOpCodeReceiveError,
   WebSocketHandShakeSubProtcolsProcedureError,
   WebSocketDataReceivedPostProcessError,
@@ -29,18 +32,19 @@ from ./private/utilities import
   convertRuneSequence,
   generateMaskKey
 
-proc handshake*(host: string, client_port: int, server_port: int, setting: TableRef[string, string]): Future[WebSocket] {.async.} =
+proc handshake*(host: string, client_port: int, server_port: int, setting: JsonNode): Future[WebSocket] {.async.} =
   ##[
   
+
   ]##
   var ws = WebSocket()
   var client = newAsyncHttpClient()
   client.headers = newHttpHeaders({
                                    "Host": "$#:$#" % [host, $(client_port)],
                                    "Origin": "http://$#:$#" % [host, $(client_port)],
-                                   "Upgrade": "$#" % [setting["upgrade"]], 
-                                   "Connection": "$#" % [setting["connection"]], 
-                                   "Sec-WebSocket-Key": "$#" % [setting["websocket_key"]],
+                                   "Upgrade": "$#" % [setting["upgrade"].getStr()], 
+                                   "Connection": "$#" % [setting["connection"].getStr()], 
+                                   "Sec-WebSocket-Key": "$#" % [setting["websocket_key"].getStr()],
                                    "Sec-WebSocket-Version": "13"
                                   })
 
@@ -86,21 +90,26 @@ proc getHeaderValues(header: HttpHeaders, key: string, lower: bool=true): seq[st
 
   return headers
 
-proc loadServerSetting*(path="./setting.json"): TableRef[string, string] =
+proc loadServerSetting*(path="./setting.json"): JsonNode =
   ##[
-  設定ファイルを読み込んでTableRefに変換する
+  設定ファイルを読み込む
   ]##
-  let table = newTable[string, string]()
   let settings = parseFile(path)
+  return settings
 
-  for setting in settings.keys():
-      var tmp = $(settings[setting])
-      table[setting] = tmp.strip(chars={'"', ' '})
+proc checkServerSetting*(settings: JsonNode, required_keys: seq[string], ): bool =
+  ##[
+  設定ファイルに最低限必要な設定が存在するかをチェック
+  すなわち「required_keys」が実際の「settings」のsubsetである。
+  ]##
+  var keys: seq[string]
+  for key in settings.keys():
+    keys.add(key)
 
-  return table
+  return required_keys.toHashSet() <= keys.toHashSet()
 
 proc openWebSocket*(request: Request,
-                    setting: TableRef[string, string], 
+                    setting: JsonNode, 
                     subProtocolProcess: proc(ws: WebSocket, request: Request): bool = proc(ws: WebSocket, request: Request): bool = true,
                     ): Future[WebSocket] {.async.} =
   ##[
@@ -118,6 +127,11 @@ proc openWebSocket*(request: Request,
     optional_data: initTable[string, string]()
   )
 
+  # server setting fileのチェック
+  var r: bool = checkServerSetting(setting, ["websocket_version", "upgrade", "connection", "websocket_key", "magic_strings", "mask_key_seeder"].toSeq())
+  if r == false:
+    raise newException(ServerSettingNotEnoughError, "設定ファイルの設定が不足しています。設定ファイルを見直してください。")
+
   # ハンドシェイク開始
   ws.status = ConnectionStatus.CONNECTING
 
@@ -129,8 +143,9 @@ proc openWebSocket*(request: Request,
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「sec-websocket-version」が見つかりません。")
 
   var sec_websocket_version = getHeaderValues(request.headers, "sec-websocket-version")
-  if not all(sec_websocket_version, proc (x: string): bool = x == setting["websocket_version"]): 
-    raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「sec-websocket-version」の値が$#ではありません。（$#）" % [setting["websocket_version"], headers["sec-websocket-version"]])
+
+  if not all(sec_websocket_version, proc (x: string): bool = x == setting["websocket_version"].getStr()): 
+    raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「sec-websocket-version」の値が$#ではありません。（$#）" % [setting["websocket_version"].getStr(), headers["sec-websocket-version"]])
 
   let version = sec_websocket_version[sec_websocket_version.low()]
   ws.version = version
@@ -140,11 +155,11 @@ proc openWebSocket*(request: Request,
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「Upgrade」が見つかりません。")
 
   var upgrades = getHeaderValues(request.headers, "Upgrade")
-  var upgrade_checker = proc (x: string): bool = x == setting["upgrade"]
+  var upgrade_checker = proc (x: string): bool = x == setting["upgrade"].getStr()
   if not any(upgrades, upgrade_checker): 
-    raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「Upgrade」の値が$#ではありません。（$#）" % [setting["upgrade"], headers["Upgrade"]])
+    raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「Upgrade」の値が$#ではありません。（$#）" % [setting["upgrade"].getStr(), headers["Upgrade"]])
 
-  let upgrade = setting["upgrade"]
+  let upgrade = setting["upgrade"].getStr()
   ws.upgrade = upgrade
 
   # Connection: 「upgrade」が含まれない場合×
@@ -152,18 +167,18 @@ proc openWebSocket*(request: Request,
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「Connection」が見つかりません。")
 
   var connections = getHeaderValues(request.headers, "Connection")
-  var connections_checker = proc (x: string): bool = x == setting["connection"]
+  var connections_checker = proc (x: string): bool = x == setting["connection"].getStr()
   if not any(connections, connections_checker): 
-    raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「Connection」の値が$#ではありません。（$#）" % [setting["connection"], headers["Connection"]])
+    raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダー「Connection」の値が$#ではありません。（$#）" % [setting["connection"].getStr(), headers["Connection"]])
 
-  let connection = setting["connection"]
+  let connection = setting["connection"].getStr()
   ws.connection = connection
 
   # Sec-WebSocket-Key: 存在しない場合×
   if not request.headers.hasKey("Sec-WebSocket-Key"): 
     raise newException(WebSocketHandShakeHeaderError, "WebSocketハンドシェイクリクエストヘッダーに「Sec-WebSocket-Key」が見つかりません。")
   
-  var sec_websocket_accept: string = getSecWebSocketAccept($request.headers["Sec-WebSocket-Key"].strip(), setting["magic_strings"])
+  var sec_websocket_accept: string = getSecWebSocketAccept($request.headers["Sec-WebSocket-Key"].strip(), setting["magic_strings"].getStr())
   ws.sec_websocket_accept = sec_websocket_accept
 
   # レスポンス用ソケット取得
@@ -412,7 +427,6 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async.} =
   else:
     frame.DATA.add(data)
 
-  # echo(frame)
   return frame
 
 proc postMessageReceivedProc*(ws: WebSocket, receive_result: tuple[opcode: OpCode, message: string]): bool {.gcsafe.} =

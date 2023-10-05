@@ -1,286 +1,287 @@
-
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>WebSocket echo chat</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
-  </head>
-  <body id="body" class="bg-light">
 
-    <div class="container pl-0 pr-0">
-      <nav class="navbar navbar-dark bg-dark mb-2">
-        <a href="#" class="navbar-brand">Bamboo Sample Echo Chat🐼</a>
-        <button class="navbar-toggler" type="button"
-            data-toggle="collapse"
-            data-target="#navmenu1"
-            aria-controls="navmenu1"
-            aria-expanded="false"
-            aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navmenu1">
-          <div class="navbar-nav">
-            <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
-            <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
-          </div>
-        </div>
-      </nav>
-    </div>
+<head>
+  <title>bamboo websocket echo chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+</head>
 
-    <div class="container overflow-scroll">
-      <p class="lead">Bamboo WebSocket Sample Echo Chat🐼へようこそ</p>
+<body id="body" class="bg-light">
 
-      <div id="message_container" class="container" style="padding-bottom: 70px;">
-        <div id="comments" class="container"></div>
-      </div>
-
-    </div>
-
-    <div class="container fixed-bottom bg-dark">
-      <div id="form" class="row p-3">
-        <input id="m" class="col-9" type="text" class="form-control" autocomplete="off" placeholder="Shift + Enter => Send"/><button type="button" class="btn btn-outline-info col-3" onclick="send_message()">送信</button>
-      </div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-
-    <div class="modal fade" id="launch_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="label1">接続完了</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            Web Socket Serverとの接続が完了しました。
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
-          </div>
+  <div class="container pl-0 pr-0">
+    <nav class="navbar navbar-dark bg-dark mb-2">
+      <a href="#" class="navbar-brand">Bamboo Sample Echo Chat🐼</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navmenu1"
+        aria-controls="navmenu1" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu1">
+        <div class="navbar-nav">
+          <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
+          <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
         </div>
       </div>
+    </nav>
+  </div>
+
+  <div class="container overflow-scroll">
+    <p class="lead">Bamboo WebSocket Sample Echo Chat🐼へようこそ</p>
+
+    <div id="message_container" class="container" style="padding-bottom: 70px;">
+      <div id="comments" class="container"></div>
     </div>
 
-    <div class="modal fade" id="connect_filed_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="label1">接続に失敗しました</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            Web Socket Serverとの接続に失敗しました。<br>
-            再度接続してください。
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
-          </div>
+  </div>
+
+  <div class="container fixed-bottom bg-dark">
+    <div id="form" class="row p-3">
+      <input id="m" class="col-9" type="text" class="form-control" autocomplete="off"
+        placeholder="Shift + Enter => Send" /><button type="button" class="btn btn-outline-info col-3"
+        onclick="send_message()">送信</button>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+
+  <div class="modal fade" id="launch_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="label1">接続完了</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Web Socket Serverとの接続が完了しました。
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="modal fade" id="disconnect_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="label1">接続が切れました</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            Web Socket Serverとの接続が切れました。<br>
-            再度接続してください。
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
-          </div>
+  <div class="modal fade" id="connect_filed_modal" tabindex="-1" role="dialog" aria-labelledby="label1"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="label1">接続に失敗しました</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Web Socket Serverとの接続に失敗しました。<br>
+          再度接続してください。
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <script>
+  <div class="modal fade" id="disconnect_modal" tabindex="-1" role="dialog" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="label1">接続が切れました</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Web Socket Serverとの接続が切れました。<br>
+          再度接続してください。
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <script>
+
+    document.getElementById("close").style.pointerEvents = 'none';
+
+    const on_open = (event) => {
+      document.getElementById("connect").style.pointerEvents = 'none';
+      document.getElementById("close").style.pointerEvents = 'auto';
+      $("#launch_modal").modal('show');
+    }
+
+    const on_message = (event) => {
+      var elem = echo_message_box(event)
+      var comments = document.getElementById("comments");
+      comments.appendChild(elem);
+      // 最下部に移動
+      window.scroll(0, document.documentElement.clientHeight);
+      // フォーカス合わせ
+      document.getElementById("m").focus()
+    }
+
+    const on_close = (event) => {
+      document.getElementById("connect").style.pointerEvents = 'auto';
       document.getElementById("close").style.pointerEvents = 'none';
+      $("#disconnect_modal").modal('show');
+    }
 
-      const on_open = (event) => {
-        document.getElementById("connect").style.pointerEvents = 'none';
-        document.getElementById("close").style.pointerEvents = 'auto';
-        $("#launch_modal").modal('show');
-      }
+    var socket = null;
+    socket = new WebSocket("ws://localhost:9001/chat", ["chat"]);
 
-      const on_message = (event) => {
-        var elem = echo_message_box(event)
+    /**
+    * ソケット通信の接続が成功したとき
+    * @type {event} event
+    */
+    socket.onopen = on_open
+
+    /**
+    * サーバーからのメッセージを受信したとき
+    * @type {event} event
+    */
+    socket.onmessage = on_message
+
+    /**
+    * サーバーとの接続が切れたとき
+    * @type {event} event
+    */
+    socket.onclose = on_close
+
+    /**
+    * サーバーにメッセージを送信する
+    * @type {event} event
+    */
+    const send_message = () => {
+      const message = document.getElementById("m");
+      var date = new Date();
+
+      var message_json = {
+        id: null,
+        type: "text",
+        message: message.value,
+        date: date.toLocaleString("ja")
+      };
+
+      if (message.value.trim() != "") {
+        socket.send(JSON.stringify(message_json));
+        var elem = self_message_box(message);
         var comments = document.getElementById("comments");
         comments.appendChild(elem);
-        // 最下部に移動
-        window.scroll(0, document.documentElement.clientHeight);
-        // フォーカス合わせ
-        document.getElementById("m").focus()
+        message.value = "";
       }
+      return false;
+    }
 
-      const on_close = (event) => {
-        document.getElementById("connect").style.pointerEvents = 'auto';
-        document.getElementById("close").style.pointerEvents = 'none';
-        $("#disconnect_modal").modal('show');
+    /**
+    * ソケット通信を閉じる
+    */
+    const close_socket = () => {
+      while (socket.bufferedAmount != 0) {/** Sending rest data... */ }
+      if (socket.readyState == 1) { socket.close(1000, ""); }
+    }
+
+    /**
+    * ソケット通信を開始する
+    */
+    const connect_socket = (sub_protocol = ["chat"]) => {
+      try {
+        socket = new WebSocket("ws://localhost:9001/chat", sub_protocol);
+        socket.onopen = on_open
+        socket.onmessage = on_message
+        socket.onclose = on_close
+      } catch (error) {
+        $("#connect_filed_modal").modal('show');
       }
+    }
 
-      var socket = null;
-      socket = new WebSocket("ws://localhost:9001/chat", ["chat"]);
+    /**
+    * 自身がメッセージを送信した際に画面上に表示する
+    * メッセージボックスを表示させる
+    */
+    const self_message_box = (message) => {
+      var elem = document.createElement('div');
+      elem.classList.add('row');
+      elem.classList.add('mb-2');
 
-      /**
-      * ソケット通信の接続が成功したとき
-      * @type {event} event
-      */
-      socket.onopen = on_open
+      var elem_left = document.createElement('div');
+      elem_left.classList.add('col-12');
 
-      /**
-      * サーバーからのメッセージを受信したとき
-      * @type {event} event
-      */
-      socket.onmessage = on_message
+      var elem_right = document.createElement('div');
+      elem_right.classList.add('col-12');
+      elem_right.classList.add('bg-white');
+      elem_right.classList.add('shadow-sm');
+      elem_right.classList.add('border');
+      elem_right.classList.add('border-info');
+      elem_right.classList.add('rounded');
+      elem_right.classList.add('p-3');
 
-      /**
-      * サーバーとの接続が切れたとき
-      * @type {event} event
-      */
-      socket.onclose = on_close
+      var date = new Date();
+      var datestr = ('0' + date.getHours()).slice(-2)
+        + ':' + ('0' + date.getMinutes()).slice(-2)
+        + ':' + ('0' + date.getSeconds()).slice(-2);
 
-      /**
-      * サーバーにメッセージを送信する
-      * @type {event} event
-      */
-      const send_message = () => 
-      {
-        const message = document.getElementById("m");
-        var date = new Date();
+      elem_right.innerText = "Send Message: " + message.value;
 
-        var message_json = {
-          id:   null,
-          type: "text",
-          message: message.value,
-          date: date.toLocaleString("ja")
-        };
+      elem.appendChild(elem_left);
+      elem.appendChild(elem_right);
+      return elem;
+    }
 
-        if(message.value.trim() != "") 
-        { 
-          socket.send(JSON.stringify(message_json));
-          var elem = self_message_box(message);
-          var comments = document.getElementById("comments");
-          comments.appendChild(elem);
-          message.value = "";
-        }
-        return false;
+    /**
+    * 自身がメッセージを送信した際に画面上に表示する
+    * メッセージボックスを表示させる
+    */
+    const echo_message_box = (event) => {
+      var elem = document.createElement('div');
+      elem.classList.add('row');
+      elem.classList.add('mb-2');
+
+      var elem_left = document.createElement('div');
+      elem_left.classList.add('col-12');
+      elem_left.classList.add('bg-white');
+      elem_left.classList.add('shadow-sm');
+      elem_left.classList.add('border');
+      elem_left.classList.add('border-success');
+      elem_left.classList.add('rounded');
+      elem_left.classList.add('p-3');
+
+      var json = JSON.parse(event.data)
+
+      elem_left.innerText = "Echo Message: " + json["message"] + "\n" +
+        "Echo Datetime: " + json["date"];
+
+      var elem_right = document.createElement('div');
+      elem_right.classList.add('col-12');
+
+      elem.appendChild(elem_left);
+      elem.appendChild(elem_right);
+      return elem;
+    }
+
+    const m = document.getElementById('m');
+    m.addEventListener('keydown', function (e) {
+      const code = e.which || e.keyCode;
+      if (code === 13 && e.shiftKey) {
+        send_message();
       }
-      
-      /**
-      * ソケット通信を閉じる
-      */
-      const close_socket = () =>
-      {
-        while(socket.bufferedAmount != 0){/** Sending rest data... */}
-        if(socket.readyState == 1){ socket.close(1000, ""); }
-      }
+    });
 
-      /**
-      * ソケット通信を開始する
-      */
-      const connect_socket = (sub_protocol=["chat"]) =>
-      {
-        try {
-          socket = new WebSocket("ws://localhost:9001/chat", sub_protocol);
-          socket.onopen = on_open
-          socket.onmessage = on_message
-          socket.onclose = on_close
-        } catch (error) {
-          $("#connect_filed_modal").modal('show');
-        }
-      }
+  </script>
 
-      /**
-      * 自身がメッセージを送信した際に画面上に表示する
-      * メッセージボックスを表示させる
-      */
-      const self_message_box = (message) =>
-      {
-        var elem = document.createElement('div');
-        elem.classList.add('row');
-        elem.classList.add('mb-2');
+</body>
 
-        var elem_left = document.createElement('div');
-        elem_left.classList.add('col-12');
-
-        var elem_right = document.createElement('div');
-        elem_right.classList.add('col-12');
-        elem_right.classList.add('bg-white');
-        elem_right.classList.add('shadow-sm');
-        elem_right.classList.add('border');
-        elem_right.classList.add('border-info');
-        elem_right.classList.add('rounded');
-        elem_right.classList.add('p-3');
-
-        var date = new Date();
-        var datestr = ('0' + date.getHours()).slice(-2)
-                + ':' + ('0' + date.getMinutes()).slice(-2)
-                + ':' + ('0' + date.getSeconds()).slice(-2);
-
-        elem_right.innerText = "Send Message: " + message.value;
-
-        elem.appendChild(elem_left);
-        elem.appendChild(elem_right);
-        return elem;
-      }
-
-      /**
-      * 自身がメッセージを送信した際に画面上に表示する
-      * メッセージボックスを表示させる
-      */
-      const echo_message_box = (event) =>
-      {
-        var elem = document.createElement('div');
-        elem.classList.add('row');
-        elem.classList.add('mb-2');
-
-        var elem_left = document.createElement('div');
-        elem_left.classList.add('col-12');
-        elem_left.classList.add('bg-white');
-        elem_left.classList.add('shadow-sm');
-        elem_left.classList.add('border');
-        elem_left.classList.add('border-success');
-        elem_left.classList.add('rounded');
-        elem_left.classList.add('p-3');
-
-        var json = JSON.parse(event.data)
-
-        elem_left.innerText = "Echo Message: " + json["message"]  + "\n" +
-                              "Echo Datetime: " + json["date"];
-        
-        var elem_right = document.createElement('div');
-        elem_right.classList.add('col-12');
-
-        elem.appendChild(elem_left);
-        elem.appendChild(elem_right);
-        return elem;
-      }
-
-      const m = document.getElementById('m');
-      m.addEventListener('keydown', function (e) {
-          const code = e.which || e.keyCode;
-          if(code === 13 && e.shiftKey) 
-          {
-            send_message();
-          }
-      });
-
-    </script>
-
-  </body>
 </html>

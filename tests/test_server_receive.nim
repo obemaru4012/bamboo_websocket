@@ -8,10 +8,10 @@ import unittest
 import asyncdispatch, 
        asynchttpserver, 
        httpcore, 
+       json,
        nativesockets, 
        net, 
        strutils, 
-       tables,
        uri
 
 from websocket import WebSocket, Opcode
@@ -22,15 +22,7 @@ from bamboo_websocket import
   sendMessage
 
 # ダミー設定テーブル作成
-var setting = {
-               "websocket_version": "13", 
-               "upgrade": "websocket", 
-               "connection": "upgrade", 
-               "websocket_key": "dGhlIHNhbXBsZSBub25jZQ==",
-               "magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
-               "mask_key_seeder": "514902776"
-              }.newTable()
-
+var setting = parseJson("""{"websocket_version": "13","upgrade": "websocket","connection": "upgrade","websocket_key": "dGhlIHNhbXBsZSBub25jZQ==","magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11","mask_key_seeder": "514902776"}""")
 
 proc sendMessageCallBack(request: Request) {.async, gcsafe.} =
   var ws = WebSocket()
