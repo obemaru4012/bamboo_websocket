@@ -12,17 +12,10 @@ import base64,
        nativesockets, 
        net, 
        std/sha1, 
-       strutils, 
-       tables
+       strutils
 
 # ダミー設定テーブル作成
-var setting = %* {
-               "websocket_version": "13", 
-               "upgrade": "websocket", 
-               "connection": "upgrade", 
-               "magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
-               "mask_key_seeder": "514902776"
-              }.newTable()
+var setting = parseJson("""{"websocket_version": "13","upgrade": "websocket","connection": "upgrade","websocket_key": "dGhlIHNhbXBsZSBub25jZQ==","magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11","mask_key_seeder": "514902776"}""")
 
 suite "utilities test":
 
@@ -59,4 +52,4 @@ suite "utilities test":
     check generateMaskKey(1) == @['j', '`', '}', '\x84']
 
   test "generateMaskKey(514902776)":
-    check generateMaskKey(setting["mask_key_seeder"].getInt()) == @['\x82', '\x00', ']', '\x8D']
+    check generateMaskKey(514902776) == @['\x82', '\x00', ']', '\x8D']
