@@ -35,6 +35,7 @@ from ./private/utilities import
 proc handshake*(host: string, client_port: int, server_port: int, setting: JsonNode): Future[WebSocket] {.async.} =
   ##[
   
+
   ]##
   var ws = WebSocket()
   var client = newAsyncHttpClient()
@@ -94,7 +95,6 @@ proc loadServerSetting*(path="./setting.json"): JsonNode =
   設定ファイルを読み込む
   ]##
   let settings = parseFile(path)
-  echo(settings)
   return settings
 
 proc checkServerSetting*(settings: JsonNode, required_keys: seq[string], ): bool =
