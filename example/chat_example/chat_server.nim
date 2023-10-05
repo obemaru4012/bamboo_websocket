@@ -20,18 +20,8 @@ proc callBack(request: Request) {.async, gcsafe.} =
 
   proc subProtocolProcess(ws: WebSocket, request: Request): bool {.gcsafe.} =
     try:
-      var table: Table[string, string]
       var sub_protocol = request.headers["sec-websocket-protocol", 0]
-
-      # Client側は「https://developer.mozilla.org/ja/docs/Web/API/btoa」でベー6エンコード実施。
-      var protocols = json.parseJson(base64.decode(sub_protocol)) # JsonNode
-
-      # sub protocolをTable[string, string]に変換
-      for key in protocols.keys():
-        var tmp = $(protocols[key])
-        table[key] = tmp.strip(chars={'"', ' '})
-
-      ws.optional_data["name"] = $(table["tag"])
+      ws.optional_data["name"] = $(sub_protocol)
   
     except IndexDefect:
       return false
@@ -52,6 +42,7 @@ proc callBack(request: Request) {.async, gcsafe.} =
     except:
       var e = getCurrentException()
       var msg = getCurrentExceptionMsg()
+      echo(msg)
       echo msg
 
       ws.status = ConnectionStatus.INITIAl
