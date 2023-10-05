@@ -32,21 +32,21 @@ $ nimble install bamboowebsocket@0.3.2
 ```nim
 # echo_server.nim
 
-import asyncdispatch,
-       asynchttpserver,
-       asyncnet,
-       httpcore,
-       nativesockets,
-       net,
-       strutils,
+import asyncdispatch, 
+       asynchttpserver, 
+       asyncnet, 
+       httpcore, 
+       nativesockets, 
+       net, 
+       strutils, 
        uri
 
 from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
-from bamboo_websocket/bamboo_websocket import
-  handshake,
-  loadServerSetting,
-  openWebSocket,
-  receiveMessage,
+from bamboo_websocket/bamboo_websocket import 
+  handshake, 
+  loadServerSetting, 
+  openWebSocket, 
+  receiveMessage, 
   sendMessage
 
 var setting = loadServerSetting()
@@ -63,7 +63,9 @@ proc callBack(request: Request) {.async, gcsafe.} =
     try:
       ws = await openWebSocket(request, setting)
     except:
-      discard
+      let error = getCurrentException()
+      let message = getCurrentException()
+      echo(message.msg)
 
     while ws.status == ConnectionStatus.OPEN:
       try:
@@ -122,15 +124,15 @@ $ nim c -r echo_server.nim
 ```nim
 # chat_server.nim
 
-import asyncdispatch,
-       asynchttpserver,
-       asyncnet,
+import asyncdispatch, 
+       asynchttpserver, 
+       asyncnet, 
        base64,
-       httpcore,
+       httpcore, 
        json,
-       nativesockets,
-       net,
-       strutils,
+       nativesockets, 
+       net, 
+       strutils, 
        tables,
        uri
 
@@ -144,19 +146,9 @@ proc callBack(request: Request) {.async, gcsafe.} =
 
   proc subProtocolProcess(ws: WebSocket, request: Request): bool {.gcsafe.} =
     try:
-      var table: Table[string, string]
       var sub_protocol = request.headers["sec-websocket-protocol", 0]
-
-      # Client側は「https://developer.mozilla.org/ja/docs/Web/API/btoa」でベー6エンコード実施。
-      var protocols = json.parseJson(base64.decode(sub_protocol)) # JsonNode
-
-      # sub protocolをTable[string, string]に変換
-      for key in protocols.keys():
-        var tmp = $(protocols[key])
-        table[key] = tmp.strip(chars={'"', ' '})
-
-      ws.optional_data["name"] = $(table["tag"])
-
+      ws.optional_data["name"] = $(sub_protocol)
+  
     except IndexDefect:
       return false
     return true
@@ -176,6 +168,7 @@ proc callBack(request: Request) {.async, gcsafe.} =
     except:
       var e = getCurrentException()
       var msg = getCurrentExceptionMsg()
+      echo(msg)
       echo msg
 
       ws.status = ConnectionStatus.INITIAl
@@ -197,10 +190,10 @@ proc callBack(request: Request) {.async, gcsafe.} =
       except:
         ws.status = ConnectionStatus.CLOSED
         ws.socket.close()
-
+    
     if WebSockets.find(ws) != -1:
       WebSockets.delete(WebSockets.find(ws))
-
+    
     if ws.status == ConnectionStatus.OPEN:
       ws.socket.close()
 
