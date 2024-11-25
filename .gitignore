@@ -1,3 +1,7 @@
 *.exe
 develop_memo.txt
 commit_message.txt
+
+chat_server
+echo_server
+room_chat_server
