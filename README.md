@@ -32,21 +32,21 @@ $ nimble install bamboowebsocket@0.3.2
 ```nim
 # echo_server.nim
 
-import asyncdispatch, 
-       asynchttpserver, 
-       asyncnet, 
-       httpcore, 
-       nativesockets, 
-       net, 
-       strutils, 
+import asyncdispatch,
+       asynchttpserver,
+       asyncnet,
+       httpcore,
+       nativesockets,
+       net,
+       strutils,
        uri
 
 from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
-from bamboo_websocket/bamboo_websocket import 
-  handshake, 
-  loadServerSetting, 
-  openWebSocket, 
-  receiveMessage, 
+from bamboo_websocket/bamboo_websocket import
+  handshake,
+  loadServerSetting,
+  openWebSocket,
+  receiveMessage,
   sendMessage
 
 var setting = loadServerSetting()
@@ -124,15 +124,15 @@ $ nim c -r echo_server.nim
 ```nim
 # chat_server.nim
 
-import asyncdispatch, 
-       asynchttpserver, 
-       asyncnet, 
+import asyncdispatch,
+       asynchttpserver,
+       asyncnet,
        base64,
-       httpcore, 
+       httpcore,
        json,
-       nativesockets, 
-       net, 
-       strutils, 
+       nativesockets,
+       net,
+       strutils,
        tables,
        uri
 
@@ -148,7 +148,7 @@ proc callBack(request: Request) {.async, gcsafe.} =
     try:
       var sub_protocol = request.headers["sec-websocket-protocol", 0]
       ws.optional_data["name"] = $(sub_protocol)
-  
+
     except IndexDefect:
       return false
     return true
@@ -190,10 +190,10 @@ proc callBack(request: Request) {.async, gcsafe.} =
       except:
         ws.status = ConnectionStatus.CLOSED
         ws.socket.close()
-    
+
     if WebSockets.find(ws) != -1:
       WebSockets.delete(WebSockets.find(ws))
-    
+
     if ws.status == ConnectionStatus.OPEN:
       ws.socket.close()
 
@@ -230,7 +230,6 @@ $ nim c -r chat_server.nim
 
 #### 📝Author
 
-- [omachi-satoshi](https://github.com/omachi-satoshi)
 - [obemaru4012](https://github.com/obemaru4012)
 
 #### 📖References
