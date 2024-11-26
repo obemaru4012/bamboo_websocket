@@ -2,12 +2,12 @@
 
 ![FLgp3pCakAAG1JU](https://user-images.githubusercontent.com/88951380/158893548-13a50cea-92ff-4506-acb8-202e5e5e317e.png)
 
-- 100%Nim による WebSocket サーバーのシンプルな実装です。
-- 竹を割ったようにさっぱりとした実装を目指しています。
-- チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
-- Bamboo の詳細な説明と利用方法については wiki に記載予定です。
-- 最新バージョンは**0.3.2**になります。
-- [README in English.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README_en.md)
+- This is a lightweight WebSocket server implemented entirely in Nim.
+- Our goal is to create a clean and elegant implementation, inspired by the simplicity of splitting bamboo.
+- This project aims to simplify the creation of chat and gaming servers.
+- [TODO] Detailed documentation about Bamboo and its usage will be provided in the wiki.
+- The latest release is **0.3.3**.
+- [README in Japanese.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README_ja.md)
 
 #### 🖥Dependency
 
@@ -16,18 +16,19 @@
 #### 👩‍💻Setup
 
 ```bash
-$ nimble install bamboowebsocket@0.3.2
+nimble install bamboowebsocket@0.3.2
 ```
 
 #### 🤔Description
 
-- Nim 標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)での利用を想定しています。
+- It is intended to be used with [asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html), which is provided in the Nim standard.
 
 #### 🤙Usage
 
 ##### 🐥Echo Server
 
-- 以下は、クライアントから受信したメッセージをエコーするサーバーです。
+- The following is a server that echoes messages received from clients.
+- The following code can be found in the bamboowebsocket/example/echo_example directory.
 
 ```nim
 # echo_server.nim
@@ -91,7 +92,7 @@ if isMainModule:
 
 ```
 
-- サーバー用の設定ファイルを記述する json ファイルをサーバーファイル（ehco_server.nim 等）と同じ場所に配置する必要があります。
+- A json file describing the configuration file for the server must be placed in the same location as the server file (e.g. ehco_server.nim)。
 
 ```json
 {
@@ -104,13 +105,10 @@ if isMainModule:
 }
 ```
 
-- ディレクトリ配置は以下の画像のようになります。
-  ![001](https://user-images.githubusercontent.com/88951380/165452751-9cb833f9-2214-4ea6-bde0-1818e1127d57.png)
-
-- echo_server.nim をコンパイル後に実行します。
+- Run echo_server.nim after compilation.
 
 ```bash
-$ nim c -r echo_server.nim
+nim c -r echo_server.nim
 ```
 
 ![002](https://user-images.githubusercontent.com/88951380/165452764-32cb29a6-a2e3-42f9-a5a5-5926d57a462a.gif)
@@ -119,7 +117,8 @@ $ nim c -r echo_server.nim
 
 ##### 🐄Chat Server
 
-- 以下は、各クライアント間でのチャットを実現するサーバーです。
+- The following code is a server that enables chatting between each client.
+- The following code can be found in the bamboowebsocket/example/chat_example directory.
 
 ```nim
 # chat_server.nim
@@ -203,7 +202,7 @@ if isMainModule:
 
 ```
 
-- サーバー用の設定ファイルを記述する json ファイル（setting.json）をサーバーファイル（chat_server.nim 等）と同じ場所に配置する必要があります。
+- A json file（setting.json） describing the configuration file for the server must be placed in the same location as the server file (e.g. chat_server.nim)。
 
 ```json
 {
@@ -216,10 +215,10 @@ if isMainModule:
 }
 ```
 
-- chat_server.nim をコンパイル後に実行します。
+- Run chat_server.nim after compilation.
 
 ```bash
-$ nim c -r chat_server.nim
+nim c -r chat_server.nim
 ```
 
 ![004](https://user-images.githubusercontent.com/88951380/173271545-15a22b29-7825-4b16-944e-ba1bc92b92ee.gif)
@@ -230,6 +229,7 @@ $ nim c -r chat_server.nim
 
 #### 📝Author
 
+- [omachi-satoshi](https://github.com/omachi-satoshi)
 - [obemaru4012](https://github.com/obemaru4012)
 
 #### 📖References

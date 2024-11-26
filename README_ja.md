@@ -2,12 +2,12 @@
 
 ![FLgp3pCakAAG1JU](https://user-images.githubusercontent.com/88951380/158893548-13a50cea-92ff-4506-acb8-202e5e5e317e.png)
 
-- This is a simple implementation of a WebSocket server with 100% Nim.
-- We aim for a refreshing implementation, like splitting bamboo.
-- The goal of this project is to make it easy to create chat and gaming servers.
-- A detailed description of Bamboo and how to use it will be included in the wiki.
-- The latest version is **0.3.2**.
-- [README in Japanese.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README.md)
+- 100%Nim による WebSocket サーバーのシンプルな実装です。
+- 竹を割ったようにさっぱりとした実装を目指しています。
+- チャットサーバー、ゲーム用のサーバーを簡単に作成できることを目指しています。
+- Bamboo の詳細な説明と利用方法については wiki に記載予定です。
+- 最新バージョンは**0.3.3**になります。
+- [README in English.](https://github.com/obemaru4012/bamboo_websocket/blob/master/README.md)
 
 #### 🖥Dependency
 
@@ -16,37 +16,38 @@
 #### 👩‍💻Setup
 
 ```bash
-$ nimble install bamboowebsocket@0.3.2
+nimble install bamboowebsocket@0.3.2
 ```
 
 #### 🤔Description
 
-- It is intended to be used with [asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html), which is provided in the Nim standard.
+- Nim 標準で提供されている[asynchttpserver](https://nim-lang.org/docs/asynchttpserver.html)での利用を想定しています。
 
 #### 🤙Usage
 
 ##### 🐥Echo Server
 
-- The following is a server that echoes messages received from clients.
+- 以下は、クライアントから受信したメッセージをエコーするサーバーです。
+- 以下のコードは bamboowebsocket/example/echo_example ディレクトリ内に置いてあります。
 
 ```nim
 # echo_server.nim
 
-import asyncdispatch, 
-       asynchttpserver, 
-       asyncnet, 
-       httpcore, 
-       nativesockets, 
-       net, 
-       strutils, 
+import asyncdispatch,
+       asynchttpserver,
+       asyncnet,
+       httpcore,
+       nativesockets,
+       net,
+       strutils,
        uri
 
 from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
-from bamboo_websocket/bamboo_websocket import 
-  handshake, 
-  loadServerSetting, 
-  openWebSocket, 
-  receiveMessage, 
+from bamboo_websocket/bamboo_websocket import
+  handshake,
+  loadServerSetting,
+  openWebSocket,
+  receiveMessage,
   sendMessage
 
 var setting = loadServerSetting()
@@ -91,7 +92,7 @@ if isMainModule:
 
 ```
 
-- A json file describing the configuration file for the server must be placed in the same location as the server file (e.g. ehco_server.nim)。
+- サーバー用の設定ファイルを記述する json ファイルをサーバーファイル（ehco_server.nim 等）と同じ場所に配置する必要があります。
 
 ```json
 {
@@ -104,10 +105,13 @@ if isMainModule:
 }
 ```
 
-- Run echo_server.nim after compilation.
+- ディレクトリ配置は以下の画像のようになります。
+  ![001](https://user-images.githubusercontent.com/88951380/165452751-9cb833f9-2214-4ea6-bde0-1818e1127d57.png)
+
+- echo_server.nim をコンパイル後に実行します。
 
 ```bash
-$ nim c -r echo_server.nim
+nim c -r echo_server.nim
 ```
 
 ![002](https://user-images.githubusercontent.com/88951380/165452764-32cb29a6-a2e3-42f9-a5a5-5926d57a462a.gif)
@@ -116,20 +120,21 @@ $ nim c -r echo_server.nim
 
 ##### 🐄Chat Server
 
-- The following code is a server that enables chatting between each client.
+- 以下は、各クライアント間でのチャットを実現するサーバーです。
+- 以下のコードは bamboowebsocket/example/chat_example ディレクトリ内に置いてあります。
 
 ```nim
 # chat_server.nim
 
-import asyncdispatch, 
-       asynchttpserver, 
-       asyncnet, 
+import asyncdispatch,
+       asynchttpserver,
+       asyncnet,
        base64,
-       httpcore, 
+       httpcore,
        json,
-       nativesockets, 
-       net, 
-       strutils, 
+       nativesockets,
+       net,
+       strutils,
        tables,
        uri
 
@@ -145,7 +150,7 @@ proc callBack(request: Request) {.async, gcsafe.} =
     try:
       var sub_protocol = request.headers["sec-websocket-protocol", 0]
       ws.optional_data["name"] = $(sub_protocol)
-  
+
     except IndexDefect:
       return false
     return true
@@ -187,10 +192,10 @@ proc callBack(request: Request) {.async, gcsafe.} =
       except:
         ws.status = ConnectionStatus.CLOSED
         ws.socket.close()
-    
+
     if WebSockets.find(ws) != -1:
       WebSockets.delete(WebSockets.find(ws))
-    
+
     if ws.status == ConnectionStatus.OPEN:
       ws.socket.close()
 
@@ -200,7 +205,7 @@ if isMainModule:
 
 ```
 
-- A json file（setting.json） describing the configuration file for the server must be placed in the same location as the server file (e.g. chat_server.nim)。
+- サーバー用の設定ファイルを記述する json ファイル（setting.json）をサーバーファイル（chat_server.nim 等）と同じ場所に配置する必要があります。
 
 ```json
 {
@@ -213,10 +218,10 @@ if isMainModule:
 }
 ```
 
-- Run chat_server.nim after compilation.
+- chat_server.nim をコンパイル後に実行します。
 
 ```bash
-$ nim c -r chat_server.nim
+nim c -r chat_server.nim
 ```
 
 ![004](https://user-images.githubusercontent.com/88951380/173271545-15a22b29-7825-4b16-944e-ba1bc92b92ee.gif)
@@ -227,7 +232,6 @@ $ nim c -r chat_server.nim
 
 #### 📝Author
 
-- [omachi-satoshi](https://github.com/omachi-satoshi)
 - [obemaru4012](https://github.com/obemaru4012)
 
 #### 📖References

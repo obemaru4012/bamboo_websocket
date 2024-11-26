@@ -42,11 +42,11 @@ suite "utilities test":
     sec_websocket_accept = base64.encode(decodeHexStrings(sec_websocket_accept))
     check sec_websocket_accept == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
 
-  test "convertRuneSequence(ぽりんき～ぽりんき～ぽりんき～ぽりんき～)":
-    check convertRuneSequence("ぽりんき～ぽりんき～ぽりんき～ぽりんき～", 8) == @["ぽりんき～ぽりん", "き～ぽりんき～ぽ", "りんき～"]
+  test "convertRuneSequence(ぷーゆーゆ！ぷーゆーゆ！ぷーゆーゆ！)":
+    check convertRuneSequence("ぷーゆーゆ！ぷーゆーゆ！ぷーゆーゆ！", 8) == @["ぷーゆーゆ！ぷー", "ゆーゆ！ぷーゆー", "ゆ！"]
 
-  test "convertRuneSequence(ぱんだ！ぱんだ！ぱんだ！)":
-    check convertRuneSequence("ぱんだ！ぱんだ！ぱんだ！", 4) == @["ぱんだ！", "ぱんだ！", "ぱんだ！"]
+  test "convertRuneSequence(ゆめちゃん、ぷゆゆ、ぺゆゆ、天才、ぱゆゆ、サムス、ホッティ)":
+    check convertRuneSequence("ゆめちゃん、ぷゆゆ、ぺゆゆ、天才、ぱゆゆ、サムス、ホッティ", 4) == @["ゆめちゃ", "ん、ぷゆ", "ゆ、ぺゆ", "ゆ、天才", "、ぱゆゆ", "、サムス", "、ホッテ", "ィ"]
 
   test "generateMaskKey(1)":
     check generateMaskKey(1) == @['j', '`', '}', '\x84']
