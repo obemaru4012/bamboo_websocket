@@ -16,7 +16,7 @@
 #### 👩‍💻Setup
 
 ```bash
-nimble install bamboowebsocket@0.3.2
+nimble install bamboowebsocket@0.3.3
 ```
 
 #### 🤔Description
