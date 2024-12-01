@@ -12,7 +12,6 @@ import asyncdispatch,
 from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
 from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
-
 var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
