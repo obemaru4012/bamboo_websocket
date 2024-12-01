@@ -13,22 +13,22 @@
 
   <div class="container pl-0 pr-0">
     <nav class="navbar navbar-dark bg-dark mb-2">
-      <a href="#" class="navbar-brand">Bamboo Sample Room Chat🐼</a>
+      <a href="#" class="navbar-brand">Bamboo Sample Room Chat🌱</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navmenu1"
         aria-controls="navmenu1" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navmenu1">
         <div class="navbar-nav">
-          <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
-          <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
+          <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">Connect</a>
+          <a id="close" class="nav-item nav-link" href="javascript:close_socket();">Close</a>
         </div>
       </div>
     </nav>
   </div>
 
   <div class="container">
-    <p class="lead">Bamboo WebSocket Sample Chat🐼へようこそ</p>
+    <p class="lead">Welcome to Bamboo WebSocket Sample Room Chat</p>
 
     <div id="message_container" class="container" style="padding-bottom: 70px;">
       <div id="comments" class="container"></div>
@@ -38,7 +38,7 @@
       <div id="form" class="row p-3">
         <input id="m" class="col-9" type="text" class="form-control" autocomplete="off"
           placeholder="Shift + Enter => Send" /><button type="button" class="btn btn-outline-info col-3"
-          onclick="send_message()">送信</button>
+          onclick="send_message()">Send</button>
       </div>
     </div>
 
@@ -56,13 +56,13 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="label1">接続完了</h5>
+            <h5 class="modal-title" id="label1">Connected✅</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            Web Socket Serverとの接続が完了しました。
+            Successfully connected to the WebSocket server.
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
@@ -76,14 +76,14 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="label1">接続に失敗しました</h5>
+            <h5 class="modal-title" id="label1">Couldn't connect❌</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            Web Socket Serverとの接続に失敗しました。<br>
-            再度接続してください。
+            Could not connect to the WebSocket server."<br>
+            Please try connecting again.
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
@@ -97,14 +97,14 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="label1">接続が切れました</h5>
+            <h5 class="modal-title" id="label1">Disconnected❗</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            Web Socket Serverとの接続が切れました。<br>
-            再度接続してください。
+            Disconnected from the WebSocket server.<br>
+            Please try connecting again.
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
@@ -118,17 +118,17 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="label1">入室したい部屋の選択と名前を入力してください。</h5>
+            <h5 class="modal-title" id="label1">Please select the room you want to join and enter your name</h5>
           </div>
           <div class="modal-body">
             <div class="form-group">
               <!-- 部屋タグ -->
               <select id="room_tag" class="form-control">
-                <option value="0">Please choose a chat room</option>
-                <option value="1">Room: 🐼</option>
-                <option value="2">Room: 👻</option>
-                <option value="3">Room: 🐱</option>
-                <option value="4">Room: 🐷</option>
+                <option value="0" disabled>Please choose a chat room</option>
+                <option value="1">Room: 🥺</option>
+                <option value="2">Room: 🤥</option>
+                <option value="3">Room: 😳</option>
+                <option value="4">Room: 😐</option>
               </select>
             </div>
 
@@ -150,10 +150,10 @@
       document.getElementById("close").style.pointerEvents = 'none';
 
       const room_tags = {
-        "1": "🐼",
-        "2": "👻",
-        "3": "🐱",
-        "4": "🐷",
+        "1": "🥺",
+        "2": "🤥",
+        "3": "😳",
+        "4": "😐",
       };
 
       var socket = null;
@@ -163,14 +163,16 @@
 
       // タグ選択モーダルが閉じるときにコールバック処理
       $("#tag_select_modal").on('hidden.bs.modal', function (e) {
-        // 接続処理
+        
         var room_tag = document.getElementById("room_tag").value;
-        var name_tag = document.getElementById("name_tag").value;
+        var name_tag = document.getElementById("name_tag").value  == "" ? "Nanashi" : document.getElementById("name_tag").value;
+
         document.getElementById("selected_tag").value = room_tag;
         document.getElementById("input_name_tag").value = name_tag;
 
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", [room_tag, name_tag]);
+          // 接続処理（漢字文化圏とかを考慮してencodeURIComponentを追加。decode処理はサーバ側に任す）
+          socket = new WebSocket("ws://localhost:9001/chat", [encodeURIComponent(room_tag), encodeURIComponent(name_tag)]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
@@ -241,7 +243,7 @@
         var name_tag = document.getElementById("name_tag").value;
 
         try {
-          socket = new WebSocket("ws://localhost:9001/chat", [room_tag, name_tag]);
+          socket = new WebSocket("ws://localhost:9001/chat", [encodeURIComponent(room_tag), encodeURIComponent(name_tag)]);
           socket.onopen = on_open
           socket.onmessage = on_message
           socket.onclose = on_close
@@ -273,7 +275,7 @@
         elem_right.classList.add('border-info');
         elem_right.classList.add('rounded');
         elem_right.classList.add('p-3');
-        elem_right.textContent = `${name}さん: ${message.value}`;
+        elem_right.textContent = `${name}: ${message.value}`;
 
         elem.appendChild(elem_left);
         elem.appendChild(elem_right);
@@ -304,7 +306,7 @@
           elem_left.classList.add('p-3');
 
           var name = data[0].name;
-          elem_left.textContent = `${name}さんが退室しました。`;
+          elem_left.textContent = `${name}が退室しました。`;
         }
         else if ("enter" in data[0]) {
           var elem_left = document.createElement('div');
@@ -318,7 +320,7 @@
           elem_left.classList.add('p-3');
 
           var name = data[0].name;
-          elem_left.textContent = `${name}さんが入室しました。`;
+          elem_left.textContent = `${name}が入室しました。`;
         }
         else {
           var elem_left = document.createElement('div');

@@ -1,7 +1,6 @@
 import asyncdispatch, 
        asynchttpserver, 
        asyncnet, 
-       base64,
        httpcore, 
        json,
        nativesockets, 
@@ -13,21 +12,13 @@ import asyncdispatch,
 from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
 from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
-var setting = loadServerSetting()
+
 var WebSockets: seq[WebSocket] = newSeq[WebSocket]()
 
 proc callBack(request: Request) {.async, gcsafe.} =
 
-  proc subProtocolProcess(ws: WebSocket, request: Request): bool {.gcsafe.} =
-    try:
-      var sub_protocol = request.headers["sec-websocket-protocol", 0]
-      ws.optional_data["name"] = $(sub_protocol)
-  
-    except IndexDefect:
-      return false
-    return true
-
   var ws = WebSocket()
+  var setting = loadServerSetting()
 
   if request.url.path == "/":
     let headers = {"Content-type": "text/html; charset=utf-8"}
@@ -36,14 +27,17 @@ proc callBack(request: Request) {.async, gcsafe.} =
 
   if request.url.path == "/chat":
     try:
-      ws = await openWebSocket(request, setting, subProtocolProcess=subProtocolProcess)
+      ws = await openWebSocket(request, setting)
+
+      # SubProtocol Proc（名前を取得、さらにURI decode処理を追加）
+      var sub_protocol = decodeUrl(request.headers["sec-websocket-protocol", 0])
+      ws.optional_data["name"] = $(sub_protocol)
+
       WebSockets.add(ws)
       echo("ID: ", ws.id, ", Tag: ", ws.optional_data["name"], " has Opened.")
     except:
-      var e = getCurrentException()
-      var msg = getCurrentExceptionMsg()
-      echo(msg)
-      echo msg
+      let message = getCurrentException()
+      echo(message.msg)
 
       ws.status = ConnectionStatus.INITIAl
 

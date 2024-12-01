@@ -11,8 +11,7 @@ import base64,
        json,
        nativesockets, 
        net, 
-       std/sha1, 
-       strutils
+       std/sha1
 
 # ダミー設定テーブル作成
 var setting = parseJson("""{"websocket_version": "13","upgrade": "websocket","connection": "upgrade","websocket_key": "dGhlIHNhbXBsZSBub25jZQ==","magic_strings": "258EAFA5-E914-47DA-95CA-C5AB0DC85B11","mask_key_seeder": "514902776"}""")

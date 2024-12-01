@@ -2,7 +2,6 @@ import asyncnet
 import tables
 
 type
-
   # 接続ステータス
   ConnectionStatus* = enum
     INITIAl     = 0 # 初期状態

@@ -35,7 +35,6 @@ from ./private/utilities import
 proc handshake*(host: string, client_port: int, server_port: int, setting: JsonNode): Future[WebSocket] {.async.} =
   ##[
   
-
   ]##
   var ws = WebSocket()
   var client = newAsyncHttpClient()
@@ -110,7 +109,6 @@ proc checkServerSetting*(settings: JsonNode, required_keys: seq[string], ): bool
 
 proc openWebSocket*(request: Request,
                     setting: JsonNode, 
-                    subProtocolProcess: proc(ws: WebSocket, request: Request): bool = proc(ws: WebSocket, request: Request): bool = true,
                     ): Future[WebSocket] {.async.} =
   ##[
 
@@ -198,8 +196,8 @@ proc openWebSocket*(request: Request,
     ws.sec_websocket_protocol = sub_protocol
 
     # Sec-WebSocket-Protocolの値に基づいて独自の処理を行う
-    if not ws.subProtocolProcess(request):
-      raise newException(WebSocketHandShakeSubProtcolsProcedureError, "WebSocketハンドシェイク時の独自処理（subProtcolsProc）でエラーが発生しています。")
+    # if not ws.subProtocolProcess(request):
+    #   raise newException(WebSocketHandShakeSubProtcolsProcedureError, "WebSocketハンドシェイク時の独自処理（subProtcolsProc）でエラーが発生しています。")
 
   # お尻に改行コード追加
   response.add("\n")
@@ -429,13 +427,7 @@ proc receiveFrame(ws: WebSocket): Future[Frame] {.async.} =
 
   return frame
 
-proc postMessageReceivedProc*(ws: WebSocket, receive_result: tuple[opcode: OpCode, message: string]): bool {.gcsafe.} =
-  ##[
-
-  ]##
-  return true
-
-proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket, receive_result: tuple[opcode: OpCode, message: string]): bool = postMessageReceivedProc): Future[tuple[opcode: OpCode, message: string]] {.async.} =
+proc receiveMessage*(ws: WebSocket): Future[tuple[opcode: OpCode, message: string]] {.async, gcsafe.} =
   ##[
 
   ]##
@@ -492,9 +484,6 @@ proc receiveMessage*(ws: WebSocket, postMessageReceivedProc: proc (ws: WebSocket
   if frame.OPCODE == OpCode.BINARY:
     # [TODO] いつか実装したいね
     code = OpCode.BINARY
-
-  if not ws.postMessageReceivedProc(receive_result):
-    raise newException(WebSocketDataReceivedPostProcessError, "WebSocketデータ受信時の後処理（postMessageReceivedProcedure）でエラーが発生しています。")
 
   receive_result = (code, message)
   return receive_result
