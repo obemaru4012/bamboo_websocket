@@ -1,7 +1,6 @@
 import asyncdispatch, 
        asynchttpserver, 
        asyncnet, 
-       base64,
        httpcore, 
        json,
        nativesockets, 
@@ -13,25 +12,13 @@ import asyncdispatch,
 from bamboo_websocket/websocket import WebSocket, ConnectionStatus, OpCode
 from bamboo_websocket/bamboo_websocket import loadServerSetting, openWebSocket, receiveMessage, sendMessage
 
-var setting = loadServerSetting()
-
 var WebSockets: Table[string, seq[WebSocket]] = initTable[string, seq[WebSocket]]()
+
 
 proc callBack(request: Request) {.async, gcsafe.} =
 
-  proc subProtocolProcess(ws: WebSocket, request: Request): bool {.gcsafe.} =
-    try:
-      var name = request.headers["sec-websocket-protocol", 0]
-      var room = request.headers["sec-websocket-protocol", 1]
-
-      ws.optional_data["name"] = $(room)
-      ws.optional_data["room"] = $(name)
-  
-    except IndexDefect:
-      return false
-    return true
-
   var ws = WebSocket()
+  var setting = loadServerSetting()
 
   if request.url.path == "/":
     let headers = {"Content-type": "text/html; charset=utf-8"}
@@ -40,8 +27,15 @@ proc callBack(request: Request) {.async, gcsafe.} =
 
   if request.url.path == "/chat":
     try:
-      ws = await openWebSocket(request, setting, subProtocolProcess=subProtocolProcess)
-      
+      ws = await openWebSocket(request, setting)
+
+      # SubProtocol Proc（名前と部屋を取得、さらにURI decode処理を追加）
+      var room = decodeUrl(request.headers["sec-websocket-protocol", 0])
+      var name = decodeUrl(request.headers["sec-websocket-protocol", 1])
+
+      ws.optional_data["room"] = $(room)
+      ws.optional_data["name"] = $(name)
+
       if WebSockets.hasKey(ws.optional_data["room"]):
         WebSockets[ws.optional_data["room"]].add(ws)
       else:
@@ -49,14 +43,14 @@ proc callBack(request: Request) {.async, gcsafe.} =
 
       # 接続したむねを部屋の他の人に通知
       for websocket in WebSockets[ws.optional_data["room"]]:
+        echo(websocket.id)
         if websocket.id != ws.id:
           await websocket.sendMessage($(%* [{"name": ws.optional_data["name"], "enter": "true"}]), 0x1)
 
       echo("ID: ", ws.id, ", Room: ", ws.optional_data["room"], ", Name: ", ws.optional_data["name"], " has Opened.")
+    
     except:
-      var e = getCurrentException()
-      var msg = getCurrentExceptionMsg()
-      echo msg
+      let message = getCurrentException()
 
       ws.status = ConnectionStatus.INITIAl
 

@@ -13,22 +13,22 @@
 
   <div class="container pl-0 pr-0">
     <nav class="navbar navbar-dark bg-dark mb-2">
-      <a href="#" class="navbar-brand">Bamboo Sample Echo Chat🐼</a>
+      <a href="#" class="navbar-brand">Bamboo Sample Echo Chat🌱</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navmenu1"
         aria-controls="navmenu1" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navmenu1">
         <div class="navbar-nav">
-          <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">接続</a>
-          <a id="close" class="nav-item nav-link" href="javascript:close_socket();">閉じる</a>
+          <a id="connect" class="nav-item nav-link" href="javascript:connect_socket();">Connect</a>
+          <a id="close" class="nav-item nav-link" href="javascript:close_socket();">Close</a>
         </div>
       </div>
     </nav>
   </div>
 
   <div class="container overflow-scroll">
-    <p class="lead">Bamboo WebSocket Sample Echo Chat🐼へようこそ</p>
+    <p class="lead">Welcome to Bamboo WebSocket Sample Echo Chat</p>
 
     <div id="message_container" class="container" style="padding-bottom: 70px;">
       <div id="comments" class="container"></div>
@@ -40,7 +40,7 @@
     <div id="form" class="row p-3">
       <input id="m" class="col-9" type="text" class="form-control" autocomplete="off"
         placeholder="Shift + Enter => Send" /><button type="button" class="btn btn-outline-info col-3"
-        onclick="send_message()">送信</button>
+        onclick="send_message()">Send</button>
     </div>
   </div>
 
@@ -58,13 +58,13 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="label1">接続完了</h5>
+          <h5 class="modal-title" id="label1">Connected✅</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          Web Socket Serverとの接続が完了しました。
+          Successfully connected to the WebSocket server.
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
@@ -78,14 +78,14 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="label1">接続に失敗しました</h5>
+          <h5 class="modal-title" id="label1">Couldn't connect❌</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          Web Socket Serverとの接続に失敗しました。<br>
-          再度接続してください。
+          Could not connect to the WebSocket server."<br>
+          Please try connecting again.
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
@@ -98,14 +98,14 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="label1">接続が切れました</h5>
+          <h5 class="modal-title" id="label1">Disconnected❗</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          Web Socket Serverとの接続が切れました。<br>
-          再度接続してください。
+          Disconnected from the WebSocket server.<br>
+          Please try connecting again.
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-info" data-dismiss="modal">OK</button>
@@ -197,7 +197,7 @@
     /**
     * ソケット通信を開始する
     */
-    const connect_socket = (sub_protocol = ["chat"]) => {
+    const connect_socket = (sub_protocol = [encodeURIComponent("chat")]) => {
       try {
         socket = new WebSocket("ws://localhost:9001/chat", sub_protocol);
         socket.onopen = on_open
